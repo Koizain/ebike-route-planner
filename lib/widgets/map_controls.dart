@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../services/app_state.dart';
 
 class MapControls extends StatelessWidget {
-  const MapControls({super.key});
+  final VoidCallback? onFavoritesTap;
+
+  const MapControls({super.key, this.onFavoritesTap});
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +28,13 @@ class MapControls extends StatelessWidget {
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           child: const Icon(Icons.directions_bike),
+        ),
+        const SizedBox(height: 8),
+        FloatingActionButton.small(
+          heroTag: 'favorites',
+          onPressed: onFavoritesTap,
+          tooltip: 'Favorites',
+          child: const Icon(Icons.favorite),
         ),
         const SizedBox(height: 8),
         FloatingActionButton.small(

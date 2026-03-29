@@ -4,29 +4,39 @@ import 'package:latlong2/latlong.dart';
 import '../models/route_point.dart';
 
 class RoutingService {
-  static const String _osrmBase = 'https://router.project-osrm.org/route/v1/bike';
+  static const String _osrmBase =
+      'https://router.project-osrm.org/route/v1/bike';
 
   Future<RouteResult?> getRoute(LatLng start, LatLng end) async {
+    return getMultiStopRoute([start, end]);
+  }
+
+  Future<RouteResult?> getMultiStopRoute(List<LatLng> stops) async {
+    if (stops.length < 2) return null;
+
+    final coords =
+        stops.map((s) => '${s.longitude},${s.latitude}').join(';');
     final url = Uri.parse(
-      '$_osrmBase/${start.longitude},${start.latitude};'
-      '${end.longitude},${end.latitude}'
-      '?overview=full&geometries=geojson',
+      '$_osrmBase/$coords?overview=full&geometries=geojson',
     );
 
     try {
-      final response = await http.get(url).timeout(const Duration(seconds: 15));
+      final response =
+          await http.get(url).timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) return null;
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       if (data['code'] != 'Ok') return null;
 
-      final route = (data['routes'] as List).first as Map<String, dynamic>;
+      final route =
+          (data['routes'] as List).first as Map<String, dynamic>;
       final distanceM = (route['distance'] as num).toDouble();
       final durationS = (route['duration'] as num).toDouble();
 
       final coordinates = (route['geometry']['coordinates'] as List)
           .cast<List>()
-          .map((c) => LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
+          .map((c) =>
+              LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
           .toList();
 
       return RouteResult(

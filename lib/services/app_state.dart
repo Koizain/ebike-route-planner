@@ -22,6 +22,9 @@ class AppState extends ChangeNotifier {
   String? routeError;
   bool showBikeTrails = true;
 
+  // Multi-stop waypoints
+  List<RoutePoint> waypoints = [];
+
   // Live tracking
   bool isTracking = false;
   StreamSubscription<LatLng>? _trackingSubscription;
@@ -47,15 +50,74 @@ class AppState extends ChangeNotifier {
   }
 
   void setStartPoint(LatLng pos) {
-    startPoint = RoutePoint(position: pos, label: 'Start');
+    startPoint = RoutePoint(position: pos, label: 'A');
     notifyListeners();
     _maybeCalculateRoute();
   }
 
   void setEndPoint(LatLng pos) {
-    endPoint = RoutePoint(position: pos, label: 'End');
+    endPoint = RoutePoint(position: pos, label: 'B');
     notifyListeners();
     _maybeCalculateRoute();
+  }
+
+  void swapStartEnd() {
+    final tmpStart = startPoint;
+    final tmpEnd = endPoint;
+    startPoint = tmpEnd != null
+        ? RoutePoint(position: tmpEnd.position, label: 'A')
+        : null;
+    endPoint = tmpStart != null
+        ? RoutePoint(position: tmpStart.position, label: 'B')
+        : null;
+    waypoints = waypoints.reversed.toList();
+    notifyListeners();
+    _maybeCalculateRoute();
+  }
+
+  void addWaypoint(LatLng pos) {
+    final label = String.fromCharCode(67 + waypoints.length); // C, D, E...
+    waypoints.add(RoutePoint(position: pos, label: label));
+    notifyListeners();
+    _maybeCalculateRoute();
+  }
+
+  void removeWaypoint(int index) {
+    if (index >= 0 && index < waypoints.length) {
+      waypoints.removeAt(index);
+      _relabelWaypoints();
+      notifyListeners();
+      _maybeCalculateRoute();
+    }
+  }
+
+  void updateWaypointPosition(int index, LatLng pos) {
+    if (index >= 0 && index < waypoints.length) {
+      waypoints[index] = RoutePoint(
+          position: pos, label: waypoints[index].label);
+      notifyListeners();
+      _maybeCalculateRoute();
+    }
+  }
+
+  void updateStartPosition(LatLng pos) {
+    startPoint = RoutePoint(position: pos, label: 'A');
+    notifyListeners();
+    _maybeCalculateRoute();
+  }
+
+  void updateEndPosition(LatLng pos) {
+    endPoint = RoutePoint(position: pos, label: 'B');
+    notifyListeners();
+    _maybeCalculateRoute();
+  }
+
+  void _relabelWaypoints() {
+    for (int i = 0; i < waypoints.length; i++) {
+      final label = String.fromCharCode(67 + i);
+      waypoints[i] = RoutePoint(
+          position: waypoints[i].position, label: label);
+    }
   }
 
   void clearRoute() {
@@ -63,6 +125,7 @@ class AppState extends ChangeNotifier {
     endPoint = null;
     currentRoute = null;
     routeError = null;
+    waypoints.clear();
     notifyListeners();
   }
 
@@ -97,7 +160,6 @@ class AppState extends ChangeNotifier {
       if (_lastTrackingPoint != null) {
         final dist = _haversineM(_lastTrackingPoint!, pos);
         trackingDistanceM += dist;
-        // Speed from distance / time between updates
         final elapsed = DateTime.now().difference(trackingStartTime!);
         if (elapsed.inSeconds > 0) {
           currentSpeedKmh =
@@ -128,11 +190,11 @@ class AppState extends ChangeNotifier {
     return 2 * R * _asin(_sqrt(h));
   }
 
-  // dart:math helpers (avoid import in this file)
   static double _toRad(double deg) => deg * 3.141592653589793 / 180;
   static double _sin(double x) => _taylorSin(x);
   static double _cos(double x) => _taylorSin(x + 3.141592653589793 / 2);
-  static double _asin(double x) => x + (x * x * x) / 6 + 3 * (x * x * x * x * x) / 40;
+  static double _asin(double x) =>
+      x + (x * x * x) / 6 + 3 * (x * x * x * x * x) / 40;
   static double _sqrt(double x) {
     if (x <= 0) return 0;
     double g = x;
@@ -141,8 +203,8 @@ class AppState extends ChangeNotifier {
     }
     return g;
   }
+
   static double _taylorSin(double x) {
-    // Normalize to [-pi, pi]
     const pi = 3.141592653589793;
     x = x % (2 * pi);
     if (x > pi) x -= 2 * pi;
@@ -180,11 +242,10 @@ class AppState extends ChangeNotifier {
     endPoint = saved.end;
     currentRoute = saved.route;
     routeError = null;
+    waypoints.clear();
     notifyListeners();
   }
 
-  /// Battery usage accounting for elevation gain.
-  /// +20% consumption for each 100m of elevation gain.
   double batteryUsagePercent() {
     if (currentRoute == null) return 0;
     final distKm = currentRoute!.distanceKm;
@@ -195,23 +256,32 @@ class AppState extends ChangeNotifier {
     return ((totalEnergy / batteryConfig.capacityWh) * 100).clamp(0, 999);
   }
 
+  /// Build the ordered list of all stops for multi-stop routing.
+  List<LatLng> _allStops() {
+    final stops = <LatLng>[];
+    if (startPoint != null) stops.add(startPoint!.position);
+    for (final wp in waypoints) {
+      stops.add(wp.position);
+    }
+    if (endPoint != null) stops.add(endPoint!.position);
+    return stops;
+  }
+
   Future<void> _maybeCalculateRoute() async {
     if (startPoint == null || endPoint == null) return;
     isLoadingRoute = true;
     routeError = null;
     notifyListeners();
 
-    final result = await _routingService.getRoute(
-      startPoint!.position,
-      endPoint!.position,
-    );
+    final stops = _allStops();
+    final result = await _routingService.getMultiStopRoute(stops);
 
     if (result != null) {
       currentRoute = result;
       notifyListeners();
 
-      // Fetch elevation in background
-      final (gain, loss) = await _elevationService.getElevation(result.points);
+      final (gain, loss) =
+          await _elevationService.getElevation(result.points);
       currentRoute = result.copyWith(
         elevationGainM: gain,
         elevationLossM: loss,
