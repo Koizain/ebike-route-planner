@@ -106,6 +106,17 @@ class RouteInfoPanel extends StatelessWidget {
                             fontSize: 12, color: Colors.orange),
                       ),
                     ],
+                    if (route.instructions.isNotEmpty) ...[
+                      const SizedBox(width: 16),
+                      const Icon(Icons.directions,
+                          size: 16, color: Colors.tealAccent),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${route.instructions.length} steps',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.tealAccent),
+                      ),
+                    ],
                   ],
                 ),
               ],

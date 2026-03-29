@@ -27,6 +27,8 @@ class RouteResult {
   final double durationMin;
   final double elevationGainM;
   final double elevationLossM;
+  final List<String> instructions;
+  final String routingEngine;
 
   const RouteResult({
     required this.points,
@@ -34,6 +36,8 @@ class RouteResult {
     required this.durationMin,
     this.elevationGainM = 0,
     this.elevationLossM = 0,
+    this.instructions = const [],
+    this.routingEngine = 'osrm',
   });
 
   RouteResult copyWith({
@@ -46,6 +50,8 @@ class RouteResult {
       durationMin: durationMin,
       elevationGainM: elevationGainM ?? this.elevationGainM,
       elevationLossM: elevationLossM ?? this.elevationLossM,
+      instructions: instructions,
+      routingEngine: routingEngine,
     );
   }
 
@@ -55,6 +61,8 @@ class RouteResult {
         'durationMin': durationMin,
         'elevationGainM': elevationGainM,
         'elevationLossM': elevationLossM,
+        'instructions': instructions,
+        'routingEngine': routingEngine,
       };
 
   factory RouteResult.fromJson(Map<String, dynamic> json) {
@@ -67,6 +75,11 @@ class RouteResult {
       durationMin: (json['durationMin'] as num).toDouble(),
       elevationGainM: (json['elevationGainM'] as num?)?.toDouble() ?? 0,
       elevationLossM: (json['elevationLossM'] as num?)?.toDouble() ?? 0,
+      instructions: (json['instructions'] as List?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      routingEngine: json['routingEngine'] as String? ?? 'osrm',
     );
   }
 }
