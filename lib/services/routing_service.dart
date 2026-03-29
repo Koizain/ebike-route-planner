@@ -34,8 +34,8 @@ class RoutingService {
       'costing': 'bicycle',
       'costing_options': {
         'bicycle': {
-          'use_roads': 0.1,
-          'use_hills': 0.5,
+          'use_roads': 0.0,
+          'use_hills': 0.4,
           'avoid_bad_surfaces': 0.8,
         }
       },

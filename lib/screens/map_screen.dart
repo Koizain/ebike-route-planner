@@ -273,8 +273,10 @@ class _MapScreenState extends State<MapScreen> {
                   polylines: [
                     Polyline(
                       points: state.currentRoute!.points,
-                      color: theme.colorScheme.primary,
-                      strokeWidth: 4,
+                      color: const Color(0xFF00E5FF),
+                      strokeWidth: 6,
+                      borderColor: const Color(0xFF0077AA),
+                      borderStrokeWidth: 2,
                     ),
                   ],
                 ),
