@@ -6,7 +6,7 @@ import '../models/route_point.dart';
 
 class ElevationService {
   static const String _apiBase =
-      'https://api.open-elevation.com/api/v1/lookup';
+      'https://api.open-meteo.com/v1/elevation';
 
   Future<(double gain, double loss, ElevationProfile? profile)> getElevation(
       List<LatLng> points) async {
@@ -16,22 +16,19 @@ class ElevationService {
     if (sampled.length < 2) return (0.0, 0.0, null);
 
     try {
-      final locations = sampled
-          .map((p) => {'latitude': p.latitude, 'longitude': p.longitude})
-          .toList();
+      // Open-Meteo supports up to 100 points per request via GET
+      final lats = sampled.map((p) => p.latitude.toStringAsFixed(5)).join(',');
+      final lngs = sampled.map((p) => p.longitude.toStringAsFixed(5)).join(',');
+      final url = '$_apiBase?latitude=$lats&longitude=$lngs';
 
       final response = await http
-          .post(
-            Uri.parse(_apiBase),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({'locations': locations}),
-          )
-          .timeout(const Duration(seconds: 15));
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode != 200) return (0.0, 0.0, null);
 
       final data = json.decode(response.body) as Map<String, dynamic>;
-      final results = data['results'] as List;
+      final rawElevations = data['elevation'] as List;
 
       double gain = 0;
       double loss = 0;
@@ -39,8 +36,8 @@ class ElevationService {
       final distances = <double>[];
       double cumDist = 0;
 
-      for (int i = 0; i < results.length; i++) {
-        final elev = (results[i]['elevation'] as num).toDouble();
+      for (int i = 0; i < rawElevations.length; i++) {
+        final elev = (rawElevations[i] as num).toDouble();
         elevations.add(elev);
 
         if (i == 0) {

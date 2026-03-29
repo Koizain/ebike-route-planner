@@ -29,6 +29,7 @@ class AppState extends ChangeNotifier {
 
   // Elevation profile
   ElevationProfile? elevationProfile;
+  bool isLoadingElevation = false;
 
   // POI markers
   List<PoiMarker> poiMarkers = [];
@@ -321,20 +322,39 @@ class AppState extends ChangeNotifier {
 
     if (result != null) {
       currentRoute = result;
+      isLoadingRoute = false;
       notifyListeners();
 
-      final (gain, loss, profile) =
-          await _elevationService.getElevation(result.points);
-      currentRoute = result.copyWith(
-        elevationGainM: gain,
-        elevationLossM: loss,
-      );
-      elevationProfile = profile;
+      // Fire-and-forget: fetch elevation in background
+      unawaited(_fetchElevationForRoute(result));
     } else {
       routeError = 'Could not calculate route. Check connection.';
+      isLoadingRoute = false;
+      notifyListeners();
     }
-    isLoadingRoute = false;
+  }
+
+  Future<void> _fetchElevationForRoute(RouteResult route) async {
+    isLoadingElevation = true;
     notifyListeners();
+
+    try {
+      final (gain, loss, profile) =
+          await _elevationService.getElevation(route.points);
+      // Only update if this route is still the current one
+      if (currentRoute == route) {
+        currentRoute = route.copyWith(
+          elevationGainM: gain,
+          elevationLossM: loss,
+        );
+        elevationProfile = profile;
+      }
+    } catch (_) {
+      // Elevation is non-critical, skip on failure
+    } finally {
+      isLoadingElevation = false;
+      notifyListeners();
+    }
   }
 
   String generateGpx() {
