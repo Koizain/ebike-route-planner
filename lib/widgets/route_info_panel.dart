@@ -41,28 +41,104 @@ class RouteInfoPanel extends StatelessWidget {
 
     final distKm = route.distanceKm;
     final durMin = route.durationMin;
-    final batteryWh = state.batteryConfig.capacityWh;
-    final consumWh = state.batteryConfig.consumptionWhPerKm;
-    final energyNeeded = distKm * consumWh;
-    final batteryPct = ((energyNeeded / batteryWh) * 100).clamp(0, 100);
+    final batteryPct = state.batteryUsagePercent();
 
-    return _card(context, child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return _card(context, child: Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _stat(Icons.straighten, '${distKm.toStringAsFixed(1)} km', 'Distance'),
-        _stat(Icons.schedule, '${durMin.toStringAsFixed(0)} min', 'Duration'),
-        _stat(
-          Icons.battery_charging_full,
-          '${batteryPct.toStringAsFixed(0)}%',
-          'Battery used',
-          color: batteryPct > 80
-              ? Colors.red
-              : batteryPct > 50
-                  ? Colors.orange
-                  : Colors.green,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _stat(Icons.straighten, '${distKm.toStringAsFixed(1)} km', 'Distance'),
+            _stat(Icons.schedule, '${durMin.toStringAsFixed(0)} min', 'Duration'),
+            _stat(
+              Icons.battery_charging_full,
+              '${batteryPct.toStringAsFixed(0)}%',
+              'Battery used',
+              color: batteryPct > 80
+                  ? Colors.red
+                  : batteryPct > 50
+                      ? Colors.orange
+                      : Colors.green,
+            ),
+          ],
+        ),
+        if (route.elevationGainM > 0 || route.elevationLossM > 0) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.trending_up, size: 16, color: Colors.orange),
+              const SizedBox(width: 4),
+              Text(
+                '↑${route.elevationGainM.toStringAsFixed(0)}m',
+                style: const TextStyle(fontSize: 12, color: Colors.orange),
+              ),
+              const SizedBox(width: 16),
+              Icon(Icons.trending_down, size: 16, color: Colors.blue),
+              const SizedBox(width: 4),
+              Text(
+                '↓${route.elevationLossM.toStringAsFixed(0)}m',
+                style: const TextStyle(fontSize: 12, color: Colors.blue),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          height: 32,
+          child: OutlinedButton.icon(
+            onPressed: () => _saveRoute(context, state),
+            icon: const Icon(Icons.bookmark_add, size: 16),
+            label: const Text('Save Route', style: TextStyle(fontSize: 12)),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+          ),
         ),
       ],
     ));
+  }
+
+  void _saveRoute(BuildContext context, AppState state) {
+    final controller = TextEditingController(
+      text:
+          '${state.currentRoute!.distanceKm.toStringAsFixed(1)}km route',
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save Route'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Route name',
+            hintText: 'e.g. Morning commute',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                state.saveCurrentRoute(name);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Route saved!')),
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _card(BuildContext context, {required Widget child}) {

@@ -15,7 +15,6 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final _mapController = MapController();
-  // Track tap mode: 0=none set, 1=start set, 2=end set (both set)
   int _tapState = 0;
 
   static const _defaultCenter = LatLng(54.6872, 25.2797); // Vilnius
@@ -24,8 +23,10 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppState>().fetchCurrentLocation().then((_) {
-        final loc = context.read<AppState>().currentLocation;
+      final appState = context.read<AppState>();
+      appState.fetchCurrentLocation().then((_) {
+        if (!mounted) return;
+        final loc = appState.currentLocation;
         if (loc != null) {
           _mapController.move(loc, 13);
         }
@@ -36,7 +37,6 @@ class _MapScreenState extends State<MapScreen> {
   void _onTap(TapPosition _, LatLng pos) {
     final state = context.read<AppState>();
     if (_tapState == 0 || _tapState == 2) {
-      // Set start, reset end
       state.startPoint = null;
       state.endPoint = null;
       state.currentRoute = null;
@@ -56,13 +56,6 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('eBike Route Planner'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.battery_charging_full),
-            tooltip: 'Battery Range',
-            onPressed: () => Navigator.pushNamed(context, '/range'),
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -74,12 +67,10 @@ class _MapScreenState extends State<MapScreen> {
               onTap: _onTap,
             ),
             children: [
-              // Base OSM tiles
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.ebikerouteplanner.app',
               ),
-              // OpenCycleMap bike trails overlay
               if (state.showBikeTrails)
                 Opacity(
                   opacity: 0.7,
@@ -89,7 +80,6 @@ class _MapScreenState extends State<MapScreen> {
                     userAgentPackageName: 'com.ebikerouteplanner.app',
                   ),
                 ),
-              // Battery range circle
               if (state.currentLocation != null)
                 CircleLayer(
                   circles: [
@@ -103,7 +93,6 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ],
                 ),
-              // Route polyline
               if (state.currentRoute != null)
                 PolylineLayer(
                   polylines: [
@@ -114,7 +103,6 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ],
                 ),
-              // Markers
               MarkerLayer(
                 markers: [
                   if (state.currentLocation != null)
@@ -149,6 +137,14 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ],
           ),
+          // Live tracking overlay
+          if (state.isTracking)
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: _trackingBanner(state),
+            ),
           // Route info at bottom
           Positioned(
             bottom: 0,
@@ -163,7 +159,7 @@ class _MapScreenState extends State<MapScreen> {
             child: const MapControls(),
           ),
           // Tap hint
-          if (_tapState == 1)
+          if (_tapState == 1 && !state.isTracking)
             Positioned(
               top: 12,
               left: 0,
@@ -184,6 +180,41 @@ class _MapScreenState extends State<MapScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _trackingBanner(AppState state) {
+    final elapsed = state.trackingStartTime != null
+        ? DateTime.now().difference(state.trackingStartTime!)
+        : Duration.zero;
+    final minutes = elapsed.inMinutes;
+    final seconds = elapsed.inSeconds % 60;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red, width: 1.5),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _trackStat('Speed', '${state.currentSpeedKmh.toStringAsFixed(1)} km/h'),
+          _trackStat('Distance', '${(state.trackingDistanceM / 1000).toStringAsFixed(2)} km'),
+          _trackStat('Time', '${minutes}m ${seconds}s'),
+        ],
+      ),
+    );
+  }
+
+  Widget _trackStat(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.white54)),
+      ],
     );
   }
 }

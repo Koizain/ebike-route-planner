@@ -29,6 +29,16 @@ class MapControls extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         FloatingActionButton.small(
+          heroTag: 'tracking',
+          onPressed: () => state.toggleTracking(),
+          tooltip: state.isTracking ? 'Stop Tracking' : 'Start Tracking',
+          backgroundColor: state.isTracking
+              ? Colors.red
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Icon(state.isTracking ? Icons.stop : Icons.gps_fixed),
+        ),
+        const SizedBox(height: 8),
+        FloatingActionButton.small(
           heroTag: 'clear',
           onPressed: () => state.clearRoute(),
           tooltip: 'Clear Route',

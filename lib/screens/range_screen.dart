@@ -3,6 +3,20 @@ import 'package:provider/provider.dart';
 import '../services/app_state.dart';
 import '../models/battery_config.dart';
 
+class _EBikePreset {
+  final String name;
+  final double capacityWh;
+  final double consumptionWhPerKm;
+
+  const _EBikePreset(this.name, this.capacityWh, this.consumptionWhPerKm);
+}
+
+const _presets = [
+  _EBikePreset('City eBike (36V 10Ah)', 360, 12),
+  _EBikePreset('Mountain eBike (36V 15Ah)', 540, 20),
+  _EBikePreset('Speed eBike (48V 17.5Ah)', 840, 18),
+];
+
 class RangeScreen extends StatefulWidget {
   const RangeScreen({super.key});
 
@@ -13,6 +27,7 @@ class RangeScreen extends StatefulWidget {
 class _RangeScreenState extends State<RangeScreen> {
   late TextEditingController _capacityCtrl;
   late TextEditingController _consumptionCtrl;
+  String _selectedPreset = 'Custom';
 
   @override
   void initState() {
@@ -27,6 +42,20 @@ class _RangeScreenState extends State<RangeScreen> {
     _capacityCtrl.dispose();
     _consumptionCtrl.dispose();
     super.dispose();
+  }
+
+  void _applyPreset(_EBikePreset preset) {
+    setState(() {
+      _selectedPreset = preset.name;
+      _capacityCtrl.text = preset.capacityWh.toStringAsFixed(0);
+      _consumptionCtrl.text = preset.consumptionWhPerKm.toStringAsFixed(0);
+    });
+    context.read<AppState>().updateBatteryConfig(
+      BatteryConfig(
+        capacityWh: preset.capacityWh,
+        consumptionWhPerKm: preset.consumptionWhPerKm,
+      ),
+    );
   }
 
   void _save() {
@@ -44,7 +73,6 @@ class _RangeScreenState extends State<RangeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Battery config saved!')),
     );
-    Navigator.pop(context);
   }
 
   @override
@@ -89,7 +117,37 @@ class _RangeScreenState extends State<RangeScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            // eBike Preset Selector
+            Text('eBike Preset', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedPreset,
+              decoration: InputDecoration(
+                filled: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.electric_bike),
+              ),
+              items: [
+                ..._presets.map((p) => DropdownMenuItem(
+                      value: p.name,
+                      child: Text(p.name, style: const TextStyle(fontSize: 14)),
+                    )),
+                const DropdownMenuItem(
+                  value: 'Custom',
+                  child: Text('Custom', style: TextStyle(fontSize: 14)),
+                ),
+              ],
+              onChanged: (val) {
+                if (val == 'Custom') {
+                  setState(() => _selectedPreset = 'Custom');
+                } else {
+                  final preset = _presets.firstWhere((p) => p.name == val);
+                  _applyPreset(preset);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
             // Inputs
             Text('Battery Settings', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
@@ -110,20 +168,6 @@ class _RangeScreenState extends State<RangeScreen> {
             Text(
               'Typical eBike: 10–20 Wh/km depending on terrain, speed, and assist level',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white38),
-            ),
-            const SizedBox(height: 32),
-            // Presets
-            Text('Quick Presets', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _preset(context, 'City (250Wh, 12Wh/km)', 250, 12),
-                _preset(context, 'Commuter (400Wh, 15Wh/km)', 400, 15),
-                _preset(context, 'MTB (625Wh, 20Wh/km)', 625, 20),
-                _preset(context, 'Long Range (750Wh, 15Wh/km)', 750, 15),
-              ],
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
@@ -157,7 +201,7 @@ class _RangeScreenState extends State<RangeScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onChanged: (_) {
-        // Live preview update
+        setState(() => _selectedPreset = 'Custom');
         final cap = double.tryParse(_capacityCtrl.text);
         final cons = double.tryParse(_consumptionCtrl.text);
         if (cap != null && cap > 0 && cons != null && cons > 0) {
@@ -165,19 +209,6 @@ class _RangeScreenState extends State<RangeScreen> {
             BatteryConfig(capacityWh: cap, consumptionWhPerKm: cons),
           );
         }
-      },
-    );
-  }
-
-  Widget _preset(BuildContext context, String label, double cap, double cons) {
-    return ActionChip(
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      onPressed: () {
-        _capacityCtrl.text = cap.toStringAsFixed(0);
-        _consumptionCtrl.text = cons.toStringAsFixed(0);
-        context.read<AppState>().updateBatteryConfig(
-          BatteryConfig(capacityWh: cap, consumptionWhPerKm: cons),
-        );
       },
     );
   }
