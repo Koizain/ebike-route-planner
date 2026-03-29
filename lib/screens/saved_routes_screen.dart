@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
 import '../services/app_state.dart';
 import '../services/storage_service.dart';
 
@@ -22,54 +23,94 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
     final state = context.watch<AppState>();
     final routes = state.savedRoutes;
 
-    if (routes.isEmpty) {
-      return Center(
-        child: Column(
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bookmark_border, size: 64, color: Colors.white24),
-            const SizedBox(height: 16),
-            Text(
-              'No saved routes yet',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(color: Colors.white54),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Calculate a route and tap Save to add it here',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.white38),
-            ),
+            Icon(Icons.bookmark, color: kAccentGreen, size: 22),
+            const SizedBox(width: 8),
+            const Text('Saved Routes'),
           ],
         ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: routes.length,
-      itemBuilder: (context, index) {
-        final route = routes[index];
-        return _routeCard(context, state, route, index);
-      },
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [kNavyDark, kNavyMid],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
+      body: routes.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.bookmark_border,
+                      size: 64,
+                      color: Colors.white.withValues(alpha: 0.15)),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No saved routes yet',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                            color:
+                                Colors.white.withValues(alpha: 0.5)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Calculate a route and tap Save to add it here',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                            color:
+                                Colors.white.withValues(alpha: 0.35)),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: routes.length,
+              itemBuilder: (context, index) {
+                final route = routes[index];
+                return _routeCard(context, state, route, index);
+              },
+            ),
     );
   }
 
   Widget _routeCard(
       BuildContext context, AppState state, SavedRoute route, int index) {
     final r = route.route;
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kNavyMid, kNavyLight.withValues(alpha: 0.5)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.2),
+          ),
+        ],
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
           state.loadRoute(route);
-          // Switch to map tab
           final nav = DefaultTabController.of(context);
           nav.animateTo(0);
         },
@@ -83,35 +124,42 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
                   Expanded(
                     child: Text(
                       route.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    onPressed: () => _confirmDelete(context, state, index),
+                    icon: Icon(Icons.delete_outline,
+                        size: 20,
+                        color: Colors.white.withValues(alpha: 0.4)),
+                    onPressed: () =>
+                        _confirmDelete(context, state, index),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  _chip(Icons.straighten, '${r.distanceKm.toStringAsFixed(1)} km'),
+                  _chip(Icons.straighten,
+                      '${r.distanceKm.toStringAsFixed(1)} km'),
                   const SizedBox(width: 8),
-                  _chip(Icons.schedule, '${r.durationMin.toStringAsFixed(0)} min'),
+                  _chip(Icons.schedule,
+                      '${r.durationMin.toStringAsFixed(0)} min'),
                   if (r.elevationGainM > 0) ...[
                     const SizedBox(width: 8),
-                    _chip(Icons.trending_up, '↑${r.elevationGainM.toStringAsFixed(0)}m'),
+                    _chip(Icons.trending_up,
+                        '${r.elevationGainM.toStringAsFixed(0)}m'),
                   ],
                 ],
               ),
               const SizedBox(height: 4),
               Text(
                 'Saved ${_formatDate(route.savedAt)}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.white38),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.35)),
               ),
             ],
           ),
@@ -122,17 +170,23 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
 
   Widget _chip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: kAccentGreen.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: kAccentGreen.withValues(alpha: 0.15),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.green),
+          Icon(icon, size: 14, color: kAccentGreen),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, color: Colors.white70)),
         ],
       ),
     );
@@ -164,7 +218,8 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
               state.deleteSavedRoute(index);
               Navigator.pop(ctx);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),

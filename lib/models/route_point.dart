@@ -1,5 +1,7 @@
 import 'package:latlong2/latlong.dart';
 
+enum RouteType { bike, ebike, mountain }
+
 class RoutePoint {
   final LatLng position;
   final String label;
@@ -19,6 +21,13 @@ class RoutePoint {
         ),
         label: json['label'] as String,
       );
+}
+
+class ElevationProfile {
+  final List<double> elevations;
+  final List<double> distances;
+
+  const ElevationProfile({required this.elevations, required this.distances});
 }
 
 class RouteResult {

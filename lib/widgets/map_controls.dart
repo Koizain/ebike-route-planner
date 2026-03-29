@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
 import '../services/app_state.dart';
 
 class MapControls extends StatelessWidget {
@@ -13,47 +14,85 @@ class MapControls extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FloatingActionButton.small(
+        _controlButton(
           heroTag: 'location',
           onPressed: () => state.fetchCurrentLocation(),
           tooltip: 'My Location',
-          child: const Icon(Icons.my_location),
+          icon: Icons.my_location,
+          isActive: false,
         ),
         const SizedBox(height: 8),
-        FloatingActionButton.small(
+        _controlButton(
           heroTag: 'trails',
           onPressed: () => state.toggleBikeTrails(),
-          tooltip: 'Toggle Bike Trails',
-          backgroundColor: state.showBikeTrails
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: const Icon(Icons.directions_bike),
+          tooltip: 'CyclOSM Layer',
+          icon: Icons.directions_bike,
+          isActive: state.showBikeTrails,
         ),
         const SizedBox(height: 8),
-        FloatingActionButton.small(
+        _controlButton(
+          heroTag: 'pois',
+          onPressed: () => state.togglePois(),
+          tooltip: 'Bike POIs',
+          icon: Icons.local_parking,
+          isActive: state.showPois,
+        ),
+        const SizedBox(height: 8),
+        _controlButton(
           heroTag: 'favorites',
           onPressed: onFavoritesTap,
           tooltip: 'Favorites',
-          child: const Icon(Icons.favorite),
+          icon: Icons.favorite,
+          isActive: false,
         ),
         const SizedBox(height: 8),
-        FloatingActionButton.small(
+        _controlButton(
           heroTag: 'tracking',
           onPressed: () => state.toggleTracking(),
           tooltip: state.isTracking ? 'Stop Tracking' : 'Start Tracking',
-          backgroundColor: state.isTracking
-              ? Colors.red
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: Icon(state.isTracking ? Icons.stop : Icons.gps_fixed),
+          icon: state.isTracking ? Icons.stop : Icons.gps_fixed,
+          isActive: state.isTracking,
+          activeColor: Colors.redAccent,
         ),
         const SizedBox(height: 8),
-        FloatingActionButton.small(
+        _controlButton(
           heroTag: 'clear',
           onPressed: () => state.clearRoute(),
           tooltip: 'Clear Route',
-          child: const Icon(Icons.clear),
+          icon: Icons.clear,
+          isActive: false,
         ),
       ],
+    );
+  }
+
+  Widget _controlButton({
+    required String heroTag,
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required IconData icon,
+    required bool isActive,
+    Color? activeColor,
+  }) {
+    final color = activeColor ?? kAccentGreen;
+    return FloatingActionButton.small(
+      heroTag: heroTag,
+      onPressed: onPressed,
+      tooltip: tooltip,
+      backgroundColor: isActive
+          ? color.withValues(alpha: 0.9)
+          : kNavyMid.withValues(alpha: 0.9),
+      foregroundColor: isActive ? Colors.white : Colors.white70,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isActive
+              ? color.withValues(alpha: 0.6)
+              : Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Icon(icon, size: 20),
     );
   }
 }

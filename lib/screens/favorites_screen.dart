@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import '../main.dart';
 import '../services/favorites_service.dart';
 
 class FavoritesPanel extends StatefulWidget {
@@ -91,7 +92,6 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
     );
 
     if (result != null) {
-      // If name changed, delete old first
       if (result.name != place.name) {
         await _favoritesService.deleteFavorite(place.name);
       }
@@ -141,12 +141,12 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
     if (!place.hasPosition) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${place.name} has no location set. Edit it first.'),
+          content:
+              Text('${place.name} has no location set. Edit it first.'),
         ),
       );
       return;
     }
-    // Ask: set as start or end?
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -181,18 +181,26 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
     return Container(
       constraints: const BoxConstraints(maxHeight: 400),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [kNavyMid, kNavyDark],
+        ),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: kAccentGreen.withValues(alpha: 0.2)),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Container(
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -200,15 +208,20 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.favorite, color: Colors.red, size: 20),
+                const Icon(Icons.favorite,
+                    color: Colors.redAccent, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Favorite Places',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.add, size: 20),
+                  icon: Icon(Icons.add,
+                      size: 20, color: kAccentGreen),
                   onPressed: _addNewFavorite,
                 ),
               ],
@@ -228,7 +241,9 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
                         : Icons.place;
                 return ListTile(
                   leading: Icon(icon,
-                      color: fav.hasPosition ? Colors.green : Colors.white38),
+                      color: fav.hasPosition
+                          ? kAccentGreen
+                          : Colors.white38),
                   title: Text(fav.name),
                   subtitle: Text(
                     fav.hasPosition
@@ -236,7 +251,9 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
                             '${fav.position!.latitude.toStringAsFixed(4)}, '
                                 '${fav.position!.longitude.toStringAsFixed(4)}')
                         : 'Not set',
-                    style: const TextStyle(fontSize: 12, color: Colors.white38),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.35)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -244,14 +261,16 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon:
-                            const Icon(Icons.edit, size: 18, color: Colors.white38),
+                        icon: Icon(Icons.edit,
+                            size: 18,
+                            color: Colors.white.withValues(alpha: 0.4)),
                         onPressed: () => _editFavorite(fav),
                       ),
                       if (fav.name != 'Home' && fav.name != 'Work')
                         IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              size: 18, color: Colors.white38),
+                          icon: Icon(Icons.delete_outline,
+                              size: 18,
+                              color: Colors.white.withValues(alpha: 0.4)),
                           onPressed: () => _deleteFavorite(fav),
                         ),
                     ],

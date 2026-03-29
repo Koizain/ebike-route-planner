@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
 import '../services/app_state.dart';
 import '../models/battery_config.dart';
 
@@ -33,8 +34,10 @@ class _RangeScreenState extends State<RangeScreen> {
   void initState() {
     super.initState();
     final config = context.read<AppState>().batteryConfig;
-    _capacityCtrl = TextEditingController(text: config.capacityWh.toStringAsFixed(0));
-    _consumptionCtrl = TextEditingController(text: config.consumptionWhPerKm.toStringAsFixed(0));
+    _capacityCtrl =
+        TextEditingController(text: config.capacityWh.toStringAsFixed(0));
+    _consumptionCtrl = TextEditingController(
+        text: config.consumptionWhPerKm.toStringAsFixed(0));
   }
 
   @override
@@ -51,11 +54,11 @@ class _RangeScreenState extends State<RangeScreen> {
       _consumptionCtrl.text = preset.consumptionWhPerKm.toStringAsFixed(0);
     });
     context.read<AppState>().updateBatteryConfig(
-      BatteryConfig(
-        capacityWh: preset.capacityWh,
-        consumptionWhPerKm: preset.consumptionWhPerKm,
-      ),
-    );
+          BatteryConfig(
+            capacityWh: preset.capacityWh,
+            consumptionWhPerKm: preset.consumptionWhPerKm,
+          ),
+        );
   }
 
   void _save() {
@@ -68,8 +71,8 @@ class _RangeScreenState extends State<RangeScreen> {
       return;
     }
     context.read<AppState>().updateBatteryConfig(
-      BatteryConfig(capacityWh: cap, consumptionWhPerKm: cons),
-    );
+          BatteryConfig(capacityWh: cap, consumptionWhPerKm: cons),
+        );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Battery config saved!')),
     );
@@ -82,7 +85,24 @@ class _RangeScreenState extends State<RangeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Battery Range Estimator'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.battery_charging_full,
+                color: kAccentGreen, size: 22),
+            const SizedBox(width: 8),
+            const Text('Battery Range'),
+          ],
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [kNavyDark, kNavyMid],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -90,66 +110,92 @@ class _RangeScreenState extends State<RangeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Range summary card
-            Card(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Icon(Icons.battery_charging_full, size: 48, color: Colors.green),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${rangeKm.toStringAsFixed(1)} km',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const Text('Estimated Range', style: TextStyle(color: Colors.white60)),
-                    const SizedBox(height: 8),
-                    Text(
-                      'A range circle is shown on the map from your current location',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white38),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [kNavyMid, kNavyLight],
                 ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: kAccentGreen.withValues(alpha: 0.2),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 16,
+                    color: Colors.black.withValues(alpha: 0.3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Icon(Icons.battery_charging_full,
+                      size: 48, color: kAccentGreen),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${rangeKm.toStringAsFixed(1)} km',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineLarge
+                        ?.copyWith(
+                          color: kAccentGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text('Estimated Range',
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6))),
+                  const SizedBox(height: 8),
+                  Text(
+                    'A range circle is shown on the map from your current location',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.4)),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
-            // eBike Preset Selector
-            Text('eBike Preset', style: Theme.of(context).textTheme.titleMedium),
+            Text('eBike Preset',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _selectedPreset,
               decoration: InputDecoration(
                 filled: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: const Icon(Icons.electric_bike),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                prefixIcon:
+                    const Icon(Icons.electric_bike, color: kAccentGreen),
               ),
+              dropdownColor: kNavyMid,
               items: [
                 ..._presets.map((p) => DropdownMenuItem(
                       value: p.name,
-                      child: Text(p.name, style: const TextStyle(fontSize: 14)),
+                      child: Text(p.name,
+                          style: const TextStyle(fontSize: 14)),
                     )),
                 const DropdownMenuItem(
                   value: 'Custom',
-                  child: Text('Custom', style: TextStyle(fontSize: 14)),
+                  child:
+                      Text('Custom', style: TextStyle(fontSize: 14)),
                 ),
               ],
               onChanged: (val) {
                 if (val == 'Custom') {
                   setState(() => _selectedPreset = 'Custom');
                 } else {
-                  final preset = _presets.firstWhere((p) => p.name == val);
+                  final preset =
+                      _presets.firstWhere((p) => p.name == val);
                   _applyPreset(preset);
                 }
               },
             ),
             const SizedBox(height: 16),
-            // Inputs
-            Text('Battery Settings', style: Theme.of(context).textTheme.titleMedium),
+            Text('Battery Settings',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
             _buildField(
               controller: _capacityCtrl,
@@ -166,8 +212,9 @@ class _RangeScreenState extends State<RangeScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Typical eBike: 10–20 Wh/km depending on terrain, speed, and assist level',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white38),
+              'Typical eBike: 10-20 Wh/km depending on terrain, speed, and assist level',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.4)),
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
@@ -192,13 +239,15 @@ class _RangeScreenState extends State<RangeScreen> {
   }) {
     return TextField(
       controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      keyboardType:
+          const TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon),
+        prefixIcon: Icon(icon, color: kAccentGreen),
         filled: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12)),
       ),
       onChanged: (_) {
         setState(() => _selectedPreset = 'Custom');
@@ -206,8 +255,9 @@ class _RangeScreenState extends State<RangeScreen> {
         final cons = double.tryParse(_consumptionCtrl.text);
         if (cap != null && cap > 0 && cons != null && cons > 0) {
           context.read<AppState>().updateBatteryConfig(
-            BatteryConfig(capacityWh: cap, consumptionWhPerKm: cons),
-          );
+                BatteryConfig(
+                    capacityWh: cap, consumptionWhPerKm: cons),
+              );
         }
       },
     );

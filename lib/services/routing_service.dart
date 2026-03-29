@@ -9,22 +9,52 @@ class RoutingService {
   static const String _osrmBase =
       'https://router.project-osrm.org/route/v1/bike';
 
-  Future<RouteResult?> getRoute(LatLng start, LatLng end) async {
-    return getMultiStopRoute([start, end]);
+  Future<RouteResult?> getRoute(LatLng start, LatLng end,
+      {RouteType routeType = RouteType.bike}) async {
+    return getMultiStopRoute([start, end], routeType: routeType);
   }
 
-  Future<RouteResult?> getMultiStopRoute(List<LatLng> stops) async {
+  Future<RouteResult?> getMultiStopRoute(List<LatLng> stops,
+      {RouteType routeType = RouteType.bike}) async {
     if (stops.length < 2) return null;
 
-    // Try Valhalla first (bike-friendly, avoids highways)
-    final valhallaResult = await _getValhallaRoute(stops);
+    final valhallaResult = await _getValhallaRoute(stops, routeType);
     if (valhallaResult != null) return valhallaResult;
 
-    // Fallback to OSRM
     return _getOsrmRoute(stops);
   }
 
-  Future<RouteResult?> _getValhallaRoute(List<LatLng> stops) async {
+  Map<String, dynamic> _costingOptions(RouteType type) {
+    switch (type) {
+      case RouteType.bike:
+        return {
+          'bicycle': {
+            'use_roads': 0.0,
+            'use_hills': 0.4,
+            'avoid_bad_surfaces': 0.8,
+          }
+        };
+      case RouteType.ebike:
+        return {
+          'bicycle': {
+            'use_roads': 0.2,
+            'use_hills': 0.8,
+            'avoid_bad_surfaces': 0.6,
+          }
+        };
+      case RouteType.mountain:
+        return {
+          'bicycle': {
+            'use_roads': 0.0,
+            'use_hills': 1.0,
+            'avoid_bad_surfaces': 0.0,
+          }
+        };
+    }
+  }
+
+  Future<RouteResult?> _getValhallaRoute(
+      List<LatLng> stops, RouteType routeType) async {
     final locations = stops
         .map((s) => {'lat': s.latitude, 'lon': s.longitude})
         .toList();
@@ -32,13 +62,7 @@ class RoutingService {
     final body = json.encode({
       'locations': locations,
       'costing': 'bicycle',
-      'costing_options': {
-        'bicycle': {
-          'use_roads': 0.0,
-          'use_hills': 0.4,
-          'avoid_bad_surfaces': 0.8,
-        }
-      },
+      'costing_options': _costingOptions(routeType),
       'directions_options': {
         'units': 'kilometers',
       },
@@ -59,7 +83,6 @@ class RoutingService {
       final trip = data['trip'] as Map<String, dynamic>;
       final legs = trip['legs'] as List;
 
-      // Decode all leg shapes and combine
       final List<LatLng> allPoints = [];
       final List<String> allInstructions = [];
 
@@ -67,13 +90,11 @@ class RoutingService {
         final shape = leg['shape'] as String;
         final points = _decodePolyline(shape);
         if (allPoints.isNotEmpty && points.isNotEmpty) {
-          // Skip duplicate junction point
           allPoints.addAll(points.skip(1));
         } else {
           allPoints.addAll(points);
         }
 
-        // Extract turn-by-turn instructions
         final maneuvers = leg['maneuvers'] as List? ?? [];
         for (final m in maneuvers) {
           final instruction = m['instruction'] as String?;
@@ -125,7 +146,6 @@ class RoutingService {
               LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()))
           .toList();
 
-      // Extract instructions from OSRM steps
       final List<String> instructions = [];
       final legs = route['legs'] as List? ?? [];
       for (final leg in legs) {
@@ -158,7 +178,6 @@ class RoutingService {
     }
   }
 
-  /// Decode Valhalla's encoded polyline (precision 6)
   static List<LatLng> _decodePolyline(String encoded) {
     final List<LatLng> points = [];
     int index = 0;

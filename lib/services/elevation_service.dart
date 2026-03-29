@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import '../models/route_point.dart';
 
 class ElevationService {
   static const String _apiBase =
       'https://api.open-elevation.com/api/v1/lookup';
 
-  /// Sample route points every ~500m and fetch elevation data.
-  /// Returns (gain, loss) in meters.
-  Future<(double gain, double loss)> getElevation(List<LatLng> points) async {
-    if (points.length < 2) return (0.0, 0.0);
+  Future<(double gain, double loss, ElevationProfile? profile)> getElevation(
+      List<LatLng> points) async {
+    if (points.length < 2) return (0.0, 0.0, null);
 
     final sampled = _sampleEvery500m(points);
-    if (sampled.length < 2) return (0.0, 0.0);
+    if (sampled.length < 2) return (0.0, 0.0, null);
 
     try {
       final locations = sampled
@@ -28,26 +28,42 @@ class ElevationService {
           )
           .timeout(const Duration(seconds: 15));
 
-      if (response.statusCode != 200) return (0.0, 0.0);
+      if (response.statusCode != 200) return (0.0, 0.0, null);
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final results = data['results'] as List;
 
       double gain = 0;
       double loss = 0;
-      for (int i = 1; i < results.length; i++) {
-        final prev = (results[i - 1]['elevation'] as num).toDouble();
-        final curr = (results[i]['elevation'] as num).toDouble();
-        final diff = curr - prev;
-        if (diff > 0) {
-          gain += diff;
+      final elevations = <double>[];
+      final distances = <double>[];
+      double cumDist = 0;
+
+      for (int i = 0; i < results.length; i++) {
+        final elev = (results[i]['elevation'] as num).toDouble();
+        elevations.add(elev);
+
+        if (i == 0) {
+          distances.add(0);
         } else {
-          loss += diff.abs();
+          cumDist += _haversineM(sampled[i - 1], sampled[i]) / 1000.0;
+          distances.add(cumDist);
+          final diff = elev - elevations[i - 1];
+          if (diff > 0) {
+            gain += diff;
+          } else {
+            loss += diff.abs();
+          }
         }
       }
-      return (gain, loss);
+
+      final profile = ElevationProfile(
+        elevations: elevations,
+        distances: distances,
+      );
+      return (gain, loss, profile);
     } catch (_) {
-      return (0.0, 0.0);
+      return (0.0, 0.0, null);
     }
   }
 
@@ -68,7 +84,6 @@ class ElevationService {
       sampled.add(points.last);
     }
 
-    // Limit to 100 points to avoid API overload
     if (sampled.length > 100) {
       final step = sampled.length / 100;
       final reduced = <LatLng>[];

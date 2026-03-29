@@ -7,12 +7,14 @@ import 'routing_service.dart';
 import 'location_service.dart';
 import 'elevation_service.dart';
 import 'storage_service.dart';
+import 'poi_service.dart';
 
 class AppState extends ChangeNotifier {
   final RoutingService _routingService = RoutingService();
   final LocationService _locationService = LocationService();
   final ElevationService _elevationService = ElevationService();
   final StorageService storageService = StorageService();
+  final PoiService _poiService = PoiService();
 
   LatLng? currentLocation;
   RoutePoint? startPoint;
@@ -21,6 +23,17 @@ class AppState extends ChangeNotifier {
   bool isLoadingRoute = false;
   String? routeError;
   bool showBikeTrails = true;
+
+  // Route type
+  RouteType routeType = RouteType.bike;
+
+  // Elevation profile
+  ElevationProfile? elevationProfile;
+
+  // POI markers
+  List<PoiMarker> poiMarkers = [];
+  bool showPois = false;
+  Timer? _poiDebounce;
 
   // Multi-stop waypoints
   List<RoutePoint> waypoints = [];
@@ -76,7 +89,7 @@ class AppState extends ChangeNotifier {
   }
 
   void addWaypoint(LatLng pos) {
-    final label = String.fromCharCode(67 + waypoints.length); // C, D, E...
+    final label = String.fromCharCode(67 + waypoints.length);
     waypoints.add(RoutePoint(position: pos, label: label));
     notifyListeners();
     _maybeCalculateRoute();
@@ -125,6 +138,7 @@ class AppState extends ChangeNotifier {
     endPoint = null;
     currentRoute = null;
     routeError = null;
+    elevationProfile = null;
     waypoints.clear();
     notifyListeners();
   }
@@ -132,6 +146,33 @@ class AppState extends ChangeNotifier {
   void toggleBikeTrails() {
     showBikeTrails = !showBikeTrails;
     notifyListeners();
+  }
+
+  void setRouteType(RouteType type) {
+    if (routeType == type) return;
+    routeType = type;
+    notifyListeners();
+    _maybeCalculateRoute();
+  }
+
+  void togglePois() {
+    showPois = !showPois;
+    notifyListeners();
+  }
+
+  void fetchPOIsForBounds(double south, double west, double north, double east) {
+    if (!showPois) return;
+    _poiDebounce?.cancel();
+    _poiDebounce = Timer(const Duration(seconds: 1), () async {
+      final pois = await _poiService.fetchBikePOIs(
+        south: south,
+        west: west,
+        north: north,
+        east: east,
+      );
+      poiMarkers = pois;
+      notifyListeners();
+    });
   }
 
   void updateBatteryConfig(BatteryConfig config) {
@@ -242,6 +283,7 @@ class AppState extends ChangeNotifier {
     endPoint = saved.end;
     currentRoute = saved.route;
     routeError = null;
+    elevationProfile = null;
     waypoints.clear();
     notifyListeners();
   }
@@ -256,7 +298,6 @@ class AppState extends ChangeNotifier {
     return ((totalEnergy / batteryConfig.capacityWh) * 100).clamp(0, 999);
   }
 
-  /// Build the ordered list of all stops for multi-stop routing.
   List<LatLng> _allStops() {
     final stops = <LatLng>[];
     if (startPoint != null) stops.add(startPoint!.position);
@@ -271,21 +312,24 @@ class AppState extends ChangeNotifier {
     if (startPoint == null || endPoint == null) return;
     isLoadingRoute = true;
     routeError = null;
+    elevationProfile = null;
     notifyListeners();
 
     final stops = _allStops();
-    final result = await _routingService.getMultiStopRoute(stops);
+    final result = await _routingService.getMultiStopRoute(stops,
+        routeType: routeType);
 
     if (result != null) {
       currentRoute = result;
       notifyListeners();
 
-      final (gain, loss) =
+      final (gain, loss, profile) =
           await _elevationService.getElevation(result.points);
       currentRoute = result.copyWith(
         elevationGainM: gain,
         elevationLossM: loss,
       );
+      elevationProfile = profile;
     } else {
       routeError = 'Could not calculate route. Check connection.';
     }
@@ -293,9 +337,31 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  String generateGpx() {
+    if (currentRoute == null) return '';
+    final points = currentRoute!.points;
+    final sb = StringBuffer();
+    sb.writeln('<?xml version="1.0" encoding="UTF-8"?>');
+    sb.writeln(
+        '<gpx version="1.1" creator="eBike Route Planner" xmlns="http://www.topografix.com/GPX/1/1">');
+    sb.writeln('  <trk>');
+    sb.writeln(
+        '    <name>${currentRoute!.distanceKm.toStringAsFixed(1)}km eBike Route</name>');
+    sb.writeln('    <trkseg>');
+    for (final p in points) {
+      sb.writeln(
+          '      <trkpt lat="${p.latitude}" lon="${p.longitude}"></trkpt>');
+    }
+    sb.writeln('    </trkseg>');
+    sb.writeln('  </trk>');
+    sb.writeln('</gpx>');
+    return sb.toString();
+  }
+
   @override
   void dispose() {
     _trackingSubscription?.cancel();
+    _poiDebounce?.cancel();
     super.dispose();
   }
 }

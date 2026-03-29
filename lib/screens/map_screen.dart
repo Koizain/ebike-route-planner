@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' hide Path;
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import '../main.dart';
 import '../services/app_state.dart';
+import '../widgets/elevation_chart.dart';
 import '../widgets/map_controls.dart';
 import '../widgets/route_info_panel.dart';
 import '../widgets/search_bar_widget.dart';
@@ -15,17 +20,35 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen>
+    with SingleTickerProviderStateMixin {
   final _mapController = MapController();
   int _tapState = 0;
-  int? _draggingMarkerIndex; // -1=start, -2=end, 0+=waypoint index
+  int? _draggingMarkerIndex;
   bool _isDragging = false;
+
+  // Route animation
+  late AnimationController _routeAnimController;
+  late Animation<double> _routeAnimation;
+  List<LatLng>? _lastRoutePoints;
 
   static const _defaultCenter = LatLng(54.6872, 25.2797);
 
   @override
   void initState() {
     super.initState();
+    _routeAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _routeAnimation = CurvedAnimation(
+      parent: _routeAnimController,
+      curve: Curves.easeOutCubic,
+    );
+    _routeAnimController.addListener(() {
+      if (mounted) setState(() {});
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = context.read<AppState>();
       appState.fetchCurrentLocation().then((_) {
@@ -36,6 +59,40 @@ class _MapScreenState extends State<MapScreen> {
         }
       });
     });
+  }
+
+  @override
+  void dispose() {
+    _routeAnimController.dispose();
+    super.dispose();
+  }
+
+  void _checkRouteAnimation(AppState state) {
+    if (state.currentRoute != null &&
+        state.currentRoute!.points != _lastRoutePoints) {
+      _lastRoutePoints = state.currentRoute!.points;
+      _routeAnimController.forward(from: 0);
+    } else if (state.currentRoute == null) {
+      _lastRoutePoints = null;
+    }
+  }
+
+  void _onMapEvent(MapEvent event) {
+    if (event is MapEventMoveEnd) {
+      _fetchPOIsForCurrentView();
+    }
+  }
+
+  void _fetchPOIsForCurrentView() {
+    final state = context.read<AppState>();
+    if (!state.showPois) return;
+    final bounds = _mapController.camera.visibleBounds;
+    state.fetchPOIsForBounds(
+      bounds.south,
+      bounds.west,
+      bounds.north,
+      bounds.east,
+    );
   }
 
   void _onTap(TapPosition _, LatLng pos) {
@@ -80,7 +137,10 @@ class _MapScreenState extends State<MapScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _RouteOptionsSheet(state: state),
+      builder: (_) => ChangeNotifierProvider.value(
+        value: state,
+        child: const _RouteOptionsSheet(),
+      ),
     );
   }
 
@@ -90,17 +150,21 @@ class _MapScreenState extends State<MapScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: isDragging ? 32 : 24,
-          height: isDragging ? 32 : 24,
+          width: isDragging ? 36 : 28,
+          height: isDragging ? 36 : 28,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
             border: Border.all(
-                color: Colors.white, width: isDragging ? 3 : 2),
+                color: Colors.white, width: isDragging ? 3 : 2.5),
             boxShadow: [
               BoxShadow(
+                blurRadius: isDragging ? 12 : 6,
+                color: color.withValues(alpha: 0.6),
+              ),
+              BoxShadow(
                 blurRadius: isDragging ? 8 : 4,
-                color: Colors.black45,
+                color: Colors.black.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -110,15 +174,14 @@ class _MapScreenState extends State<MapScreen> {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: isDragging ? 16 : 12,
+                fontSize: isDragging ? 16 : 13,
               ),
             ),
           ),
         ),
-        Icon(
-          Icons.arrow_drop_down,
-          color: color,
-          size: isDragging ? 20 : 14,
+        CustomPaint(
+          size: Size(12, isDragging ? 10 : 7),
+          painter: _TrianglePainter(color: color),
         ),
       ],
     );
@@ -133,8 +196,8 @@ class _MapScreenState extends State<MapScreen> {
     final active = _draggingMarkerIndex == markerIndex && _isDragging;
     return Marker(
       point: point,
-      width: active ? 52 : 38,
-      height: active ? 52 : 38,
+      width: active ? 56 : 42,
+      height: active ? 56 : 42,
       child: GestureDetector(
         onLongPress: () {
           setState(() {
@@ -172,7 +235,8 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final theme = Theme.of(context);
+
+    _checkRouteAnimation(state);
 
     final markers = <Marker>[];
 
@@ -180,49 +244,96 @@ class _MapScreenState extends State<MapScreen> {
     if (state.currentLocation != null) {
       markers.add(Marker(
         point: state.currentLocation!,
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.blue,
+            color: kAccentBlue,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 3),
-            boxShadow: const [
-              BoxShadow(blurRadius: 4, color: Colors.black45)
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 8,
+                color: kAccentBlue.withValues(alpha: 0.5),
+              ),
+              const BoxShadow(blurRadius: 4, color: Colors.black45),
             ],
           ),
         ),
       ));
     }
 
-    // Start marker (draggable, labeled A)
+    // Start marker
     if (state.startPoint != null) {
       markers.add(_draggableMarker(
         point: state.startPoint!.position,
         label: 'A',
-        color: Colors.green,
+        color: kAccentGreen,
         markerIndex: -1,
       ));
     }
 
-    // Waypoint markers (draggable, labeled C, D, E...)
+    // Waypoints
     for (int i = 0; i < state.waypoints.length; i++) {
       markers.add(_draggableMarker(
         point: state.waypoints[i].position,
         label: state.waypoints[i].label,
-        color: Colors.orange,
+        color: Colors.orangeAccent,
         markerIndex: i,
       ));
     }
 
-    // End marker (draggable, labeled B)
+    // End marker
     if (state.endPoint != null) {
       markers.add(_draggableMarker(
         point: state.endPoint!.position,
         label: 'B',
-        color: Colors.red,
+        color: kAccentBlue,
         markerIndex: -2,
       ));
+    }
+
+    // POI markers
+    if (state.showPois) {
+      for (final poi in state.poiMarkers) {
+        markers.add(Marker(
+          point: poi.position,
+          width: 16,
+          height: 16,
+          child: Container(
+            decoration: BoxDecoration(
+              color: poi.type == 'repair'
+                  ? Colors.orangeAccent
+                  : kAccentGreen,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 4,
+                  color: Colors.black.withValues(alpha: 0.3),
+                ),
+              ],
+            ),
+            child: Icon(
+              poi.type == 'repair' ? Icons.build : Icons.local_parking,
+              size: 9,
+              color: Colors.white,
+            ),
+          ),
+        ));
+      }
+    }
+
+    // Animated route points
+    List<LatLng>? animatedRoutePoints;
+    if (state.currentRoute != null) {
+      final allPoints = state.currentRoute!.points;
+      if (_routeAnimController.isAnimating || !_routeAnimController.isCompleted) {
+        final count = (_routeAnimation.value * allPoints.length).round();
+        animatedRoutePoints = allPoints.sublist(0, count.clamp(2, allPoints.length));
+      } else {
+        animatedRoutePoints = allPoints;
+      }
     }
 
     return Scaffold(
@@ -234,6 +345,7 @@ class _MapScreenState extends State<MapScreen> {
               initialCenter: _defaultCenter,
               initialZoom: 12,
               onTap: _onTap,
+              onMapEvent: _onMapEvent,
               interactionOptions: InteractionOptions(
                 flags: _isDragging
                     ? InteractiveFlag.none
@@ -241,20 +353,16 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
             children: [
+              // Base tile layer - CyclOSM when bike trails on, regular OSM otherwise
               TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: state.showBikeTrails
+                    ? 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
+                    : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: state.showBikeTrails
+                    ? const ['a', 'b', 'c']
+                    : const [],
                 userAgentPackageName: 'com.ebikerouteplanner.app',
               ),
-              if (state.showBikeTrails)
-                Opacity(
-                  opacity: 0.7,
-                  child: TileLayer(
-                    urlTemplate:
-                        'https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.ebikerouteplanner.app',
-                  ),
-                ),
               if (state.currentLocation != null)
                 CircleLayer(
                   circles: [
@@ -262,20 +370,25 @@ class _MapScreenState extends State<MapScreen> {
                       point: state.currentLocation!,
                       radius: state.batteryConfig.rangeKm * 1000,
                       useRadiusInMeter: true,
-                      color: Colors.green.withValues(alpha: 0.08),
-                      borderColor: Colors.green.withValues(alpha: 0.4),
+                      color: kAccentGreen.withValues(alpha: 0.06),
+                      borderColor: kAccentGreen.withValues(alpha: 0.3),
                       borderStrokeWidth: 2,
                     ),
                   ],
                 ),
-              if (state.currentRoute != null)
+              if (animatedRoutePoints != null &&
+                  animatedRoutePoints.length >= 2)
                 PolylineLayer(
                   polylines: [
                     Polyline(
-                      points: state.currentRoute!.points,
-                      color: const Color(0xFF00E5FF),
-                      strokeWidth: 6,
-                      borderColor: const Color(0xFF0077AA),
+                      points: animatedRoutePoints,
+                      gradientColors: const [
+                        kAccentGreen,
+                        Color(0xFF00C4FF),
+                        kAccentBlue,
+                      ],
+                      strokeWidth: 5,
+                      borderColor: kNavyDark.withValues(alpha: 0.5),
                       borderStrokeWidth: 2,
                     ),
                   ],
@@ -293,7 +406,7 @@ class _MapScreenState extends State<MapScreen> {
           // Live tracking overlay
           if (state.isTracking)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 130,
+              top: MediaQuery.of(context).padding.top + 180,
               left: 12,
               right: 12,
               child: _trackingBanner(state),
@@ -328,9 +441,20 @@ class _MapScreenState extends State<MapScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black87,
+        gradient: LinearGradient(
+          colors: [
+            kNavyMid.withValues(alpha: 0.95),
+            kNavyDark.withValues(alpha: 0.95),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red, width: 1.5),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 12,
+            color: Colors.black.withValues(alpha: 0.4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -356,128 +480,223 @@ class _MapScreenState extends State<MapScreen> {
                 fontSize: 14)),
         Text(label,
             style:
-                const TextStyle(fontSize: 10, color: Colors.white54)),
+                TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.5))),
       ],
     );
   }
 }
 
-class _RouteOptionsSheet extends StatelessWidget {
-  final AppState state;
+class _TrianglePainter extends CustomPainter {
+  final Color color;
+  _TrianglePainter({required this.color});
 
-  const _RouteOptionsSheet({required this.state});
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path()
+      ..moveTo(size.width / 2, size.height)
+      ..lineTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _RouteOptionsSheet extends StatelessWidget {
+  const _RouteOptionsSheet();
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     final route = state.currentRoute!;
     final batteryPct = state.batteryUsagePercent();
+    final now = DateTime.now();
+    final arrival = now.add(Duration(minutes: route.durationMin.round()));
+    final etaStr =
+        '${arrival.hour.toString().padLeft(2, '0')}:${arrival.minute.toString().padLeft(2, '0')}';
 
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(20)),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [kNavyMid, kNavyDark],
+        ),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: kAccentGreen.withValues(alpha: 0.2)),
+          left: BorderSide(color: kAccentGreen.withValues(alpha: 0.1)),
+          right: BorderSide(color: kAccentGreen.withValues(alpha: 0.1)),
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            // Drag handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Route Summary',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                _summaryRow(Icons.straighten, 'Distance',
-                    '${route.distanceKm.toStringAsFixed(1)} km'),
-                _summaryRow(Icons.schedule, 'Duration',
-                    '${route.durationMin.toStringAsFixed(0)} min'),
-                _summaryRow(
-                  Icons.battery_charging_full,
-                  'Battery Usage',
-                  '${batteryPct.toStringAsFixed(0)}%',
-                  valueColor: batteryPct > 80
-                      ? Colors.red
-                      : batteryPct > 50
-                          ? Colors.orange
-                          : Colors.green,
-                ),
-                if (route.elevationGainM > 0)
-                  _summaryRow(Icons.trending_up, 'Elevation Gain',
-                      '${route.elevationGainM.toStringAsFixed(0)} m'),
-                if (route.elevationLossM > 0)
-                  _summaryRow(Icons.trending_down, 'Elevation Loss',
-                      '${route.elevationLossM.toStringAsFixed(0)} m'),
-                _summaryRow(Icons.route, 'Route Points',
-                    '${route.points.length}'),
-                if (state.waypoints.isNotEmpty)
-                  _summaryRow(Icons.pin_drop, 'Waypoints',
-                      '${state.waypoints.length}'),
-                const SizedBox(height: 20),
-                // Add waypoint button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Tap on the map to add a waypoint'),
-                        ),
-                      );
-                      // Next tap adds waypoint
-                      _addWaypointMode(context, state);
-                    },
-                    icon: const Icon(Icons.add_location_alt, size: 18),
-                    label: const Text('Add Waypoint'),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.route,
+                          color: kAccentGreen, size: 22),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Route Summary',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Start navigation placeholder
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Navigation coming soon!'),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.navigation, size: 18),
-                    label: const Text('Start Navigation'),
+                  const SizedBox(height: 16),
+                  _summaryRow(Icons.straighten, 'Distance',
+                      '${route.distanceKm.toStringAsFixed(1)} km'),
+                  _summaryRow(Icons.schedule, 'Duration',
+                      '${route.durationMin.toStringAsFixed(0)} min'),
+                  _summaryRow(Icons.access_time, 'ETA', '~$etaStr'),
+                  _summaryRow(
+                    Icons.battery_charging_full,
+                    'Battery Usage',
+                    '${batteryPct.toStringAsFixed(0)}%',
+                    valueColor: batteryPct > 80
+                        ? Colors.redAccent
+                        : batteryPct > 50
+                            ? Colors.orangeAccent
+                            : kAccentGreen,
                   ),
-                ),
-              ],
+                  if (route.elevationGainM > 0)
+                    _summaryRow(Icons.trending_up, 'Elevation Gain',
+                        '${route.elevationGainM.toStringAsFixed(0)} m'),
+                  if (route.elevationLossM > 0)
+                    _summaryRow(Icons.trending_down, 'Elevation Loss',
+                        '${route.elevationLossM.toStringAsFixed(0)} m'),
+                  _summaryRow(Icons.route, 'Route Points',
+                      '${route.points.length}'),
+                  if (state.waypoints.isNotEmpty)
+                    _summaryRow(Icons.pin_drop, 'Waypoints',
+                        '${state.waypoints.length}'),
+                  // Elevation chart
+                  if (state.elevationProfile != null) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
+                      ),
+                      child: ElevationChart(
+                        profile: state.elevationProfile!,
+                        trackingProgressKm: state.isTracking
+                            ? state.trackingDistanceM / 1000
+                            : null,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  // Action buttons
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Tap on the map to add a waypoint'),
+                          ),
+                        );
+                        _addWaypointMode(context, state);
+                      },
+                      icon: const Icon(Icons.add_location_alt, size: 18),
+                      label: const Text('Add Waypoint'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // GPX Export
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _exportGpx(context, state),
+                      icon: const Icon(Icons.file_download, size: 18),
+                      label: const Text('Export GPX'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Navigation coming soon!'),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.navigation, size: 18),
+                      label: const Text('Start Navigation'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   void _addWaypointMode(BuildContext context, AppState state) {
-    // Use the map center as the waypoint position
     final route = state.currentRoute;
     if (route != null && route.points.length > 2) {
-      // Add waypoint at the midpoint of the route
       final midIndex = route.points.length ~/ 2;
       state.addWaypoint(route.points[midIndex]);
+    }
+  }
+
+  void _exportGpx(BuildContext context, AppState state) async {
+    final gpx = state.generateGpx();
+    if (gpx.isEmpty) return;
+
+    try {
+      final bytes = Uint8List.fromList(utf8.encode(gpx));
+      final xFile = XFile.fromData(
+        bytes,
+        name: 'route.gpx',
+        mimeType: 'application/gpx+xml',
+      );
+      await Share.shareXFiles([xFile], text: 'eBike Route (GPX)');
+    } catch (_) {
+      // Fallback: copy to clipboard
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('GPX export not supported on this platform')),
+        );
+      }
     }
   }
 
@@ -487,11 +706,11 @@ class _RouteOptionsSheet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.white54),
+          Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.5)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(label,
-                style: const TextStyle(color: Colors.white70)),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
           ),
           Text(
             value,
