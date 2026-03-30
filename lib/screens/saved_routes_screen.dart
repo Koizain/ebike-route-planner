@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../services/app_state.dart';
@@ -28,19 +29,12 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bookmark, color: kAccentGreen, size: 22),
+            const Icon(Icons.bookmark, color: kIOSBlue, size: 22),
             const SizedBox(width: 8),
-            const Text('Saved Routes'),
+            Text('Saved Routes',
+                style: GoogleFonts.inter(
+                    fontSize: 17, fontWeight: FontWeight.w600)),
           ],
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [kNavyDark, kNavyMid],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
         ),
       ),
       body: routes.isEmpty
@@ -49,27 +43,21 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.bookmark_border,
-                      size: 64,
-                      color: Colors.white.withValues(alpha: 0.15)),
+                      size: 64, color: kIOSSeparator),
                   const SizedBox(height: 16),
                   Text(
                     'No saved routes yet',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(
-                            color:
-                                Colors.white.withValues(alpha: 0.5)),
+                    style: GoogleFonts.inter(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: kIOSSecondaryText,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Calculate a route and tap Save to add it here',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
-                            color:
-                                Colors.white.withValues(alpha: 0.35)),
+                    style: GoogleFonts.inter(
+                        color: kIOSSecondaryText, fontSize: 13),
                   ),
                 ],
               ),
@@ -91,24 +79,17 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [kNavyMid, kNavyLight.withValues(alpha: 0.5)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        color: kIOSSurface,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            blurRadius: 8,
-            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 6,
+            color: Colors.black.withValues(alpha: 0.08),
           ),
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           state.loadRoute(route);
           final nav = DefaultTabController.of(context);
@@ -124,17 +105,17 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
                   Expanded(
                     child: Text(
                       route.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: GoogleFonts.inter(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: kIOSPrimaryText,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete_outline,
-                        size: 20,
-                        color: Colors.white.withValues(alpha: 0.4)),
+                    icon: const Icon(Icons.delete_outline,
+                        size: 20, color: kIOSSecondaryText),
                     onPressed: () =>
                         _confirmDelete(context, state, index),
                   ),
@@ -158,8 +139,8 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
               const SizedBox(height: 4),
               Text(
                 'Saved ${_formatDate(route.savedAt)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.35)),
+                style: GoogleFonts.inter(
+                    color: kIOSSecondaryText, fontSize: 12),
               ),
             ],
           ),
@@ -173,20 +154,17 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
       padding:
           const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: kAccentGreen.withValues(alpha: 0.1),
+        color: kIOSBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: kAccentGreen.withValues(alpha: 0.15),
-        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: kAccentGreen),
+          Icon(icon, size: 14, color: kIOSBlue),
           const SizedBox(width: 4),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 12, color: Colors.white70)),
+              style: GoogleFonts.inter(
+                  fontSize: 12, color: kIOSPrimaryText)),
         ],
       ),
     );
@@ -219,7 +197,7 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
               Navigator.pop(ctx);
             },
             child: const Text('Delete',
-                style: TextStyle(color: Colors.redAccent)),
+                style: TextStyle(color: kIOSRed)),
           ),
         ],
       ),

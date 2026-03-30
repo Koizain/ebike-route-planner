@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import '../main.dart';
 import '../services/favorites_service.dart';
@@ -180,27 +181,19 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxHeight: 400),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [kNavyMid, kNavyDark],
-        ),
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(color: kAccentGreen.withValues(alpha: 0.2)),
-        ),
+      decoration: const BoxDecoration(
+        color: kIOSSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 10),
           Container(
-            width: 40,
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: kIOSSeparator,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -209,19 +202,20 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
             child: Row(
               children: [
                 const Icon(Icons.favorite,
-                    color: Colors.redAccent, size: 20),
+                    color: kIOSRed, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Favorite Places',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: kIOSPrimaryText,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.add,
-                      size: 20, color: kAccentGreen),
+                  icon: const Icon(Icons.add,
+                      size: 20, color: kIOSBlue),
                   onPressed: _addNewFavorite,
                 ),
               ],
@@ -242,18 +236,20 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
                 return ListTile(
                   leading: Icon(icon,
                       color: fav.hasPosition
-                          ? kAccentGreen
-                          : Colors.white38),
-                  title: Text(fav.name),
+                          ? kIOSBlue
+                          : kIOSSecondaryText),
+                  title: Text(fav.name,
+                      style: GoogleFonts.inter(
+                          color: kIOSPrimaryText,
+                          fontWeight: FontWeight.w500)),
                   subtitle: Text(
                     fav.hasPosition
                         ? (fav.address ??
                             '${fav.position!.latitude.toStringAsFixed(4)}, '
                                 '${fav.position!.longitude.toStringAsFixed(4)}')
                         : 'Not set',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.35)),
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: kIOSSecondaryText),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -261,16 +257,14 @@ class _FavoritesPanelState extends State<FavoritesPanel> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit,
-                            size: 18,
-                            color: Colors.white.withValues(alpha: 0.4)),
+                        icon: const Icon(Icons.edit,
+                            size: 18, color: kIOSSecondaryText),
                         onPressed: () => _editFavorite(fav),
                       ),
                       if (fav.name != 'Home' && fav.name != 'Work')
                         IconButton(
-                          icon: Icon(Icons.delete_outline,
-                              size: 18,
-                              color: Colors.white.withValues(alpha: 0.4)),
+                          icon: const Icon(Icons.delete_outline,
+                              size: 18, color: kIOSSecondaryText),
                           onPressed: () => _deleteFavorite(fav),
                         ),
                     ],

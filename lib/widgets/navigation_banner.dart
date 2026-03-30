@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../models/route_point.dart';
@@ -23,37 +24,36 @@ class NavigationBanner extends StatelessWidget {
         : '${(distM / 1000).toStringAsFixed(1)}km';
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            kNavyMid.withValues(alpha: 0.95),
-            kNavyDark.withValues(alpha: 0.95),
-          ],
+        gradient: const LinearGradient(
+          colors: [kIOSBlue, kIOSGreen],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kAccentGreen.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
               blurRadius: 12,
-              color: Colors.black.withValues(alpha: 0.5)),
+              color: kIOSBlue.withValues(alpha: 0.4),
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
         children: [
           // Direction icon
           Container(
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: kAccentGreen.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               _directionIcon(maneuver.direction),
-              size: 32,
-              color: kAccentGreen,
+              size: 30,
+              color: Colors.white,
             ),
           ),
           const SizedBox(width: 14),
@@ -65,18 +65,19 @@ class NavigationBanner extends StatelessWidget {
               children: [
                 Text(
                   distStr,
-                  style: const TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
                 if (maneuver.streetName.isNotEmpty)
                   Text(
                     maneuver.streetName,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -84,9 +85,9 @@ class NavigationBanner extends StatelessWidget {
                 else
                   Text(
                     maneuver.instruction,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -97,9 +98,9 @@ class NavigationBanner extends StatelessWidget {
           // Stop navigation button
           IconButton(
             onPressed: () => state.stopNavigation(),
-            icon: const Icon(Icons.close, color: Colors.redAccent),
+            icon: const Icon(Icons.close, color: Colors.white),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.redAccent.withValues(alpha: 0.15),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
             ),
             tooltip: 'Stop Navigation',
           ),

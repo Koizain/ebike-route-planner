@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../services/app_state.dart';
@@ -31,19 +32,13 @@ class LiveStatsBar extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            kNavyMid.withValues(alpha: 0.95),
-            kNavyDark.withValues(alpha: 0.95),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: kAccentBlue.withValues(alpha: 0.3)),
+        color: kIOSSurface,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              blurRadius: 10,
-              color: Colors.black.withValues(alpha: 0.4)),
+              blurRadius: 8,
+              color: Colors.black.withValues(alpha: 0.12),
+              offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -55,16 +50,15 @@ class LiveStatsBar extends StatelessWidget {
             children: [
               Text(
                 state.currentSpeedKmh.toStringAsFixed(1),
-                style: const TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  color: kIOSPrimaryText,
                 ),
               ),
               Text('km/h',
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white.withValues(alpha: 0.5))),
+                  style: GoogleFonts.inter(
+                      fontSize: 10, color: kIOSSecondaryText)),
             ],
           ),
           _miniStat('Avg', avgSpeed.toStringAsFixed(1), 'km/h'),
@@ -78,18 +72,18 @@ class LiveStatsBar extends StatelessWidget {
                 Icons.favorite,
                 size: 18,
                 color: state.currentSpeedKmh > 10
-                    ? Colors.redAccent
-                    : Colors.white38,
+                    ? kIOSRed
+                    : kIOSSecondaryText,
               ),
               const SizedBox(height: 2),
               Text(
                 activityLevel,
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: state.currentSpeedKmh > 10
-                      ? Colors.redAccent
-                      : Colors.white54,
+                      ? kIOSRed
+                      : kIOSSecondaryText,
                 ),
               ),
             ],
@@ -105,17 +99,16 @@ class LiveStatsBar extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: GoogleFonts.inter(
             fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            color: kIOSPrimaryText,
           ),
         ),
         Text(
           '$label ($unit)',
-          style: TextStyle(
-              fontSize: 9,
-              color: Colors.white.withValues(alpha: 0.4)),
+          style: GoogleFonts.inter(
+              fontSize: 9, color: kIOSSecondaryText),
         ),
       ],
     );

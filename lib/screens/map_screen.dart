@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -171,54 +172,98 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  Widget _buildLabeledMarker(String label, Color color,
-      {bool isDragging = false}) {
+  Widget _buildStartMarker({bool isDragging = false}) {
+    return Container(
+      width: isDragging ? 36 : 28,
+      height: isDragging ? 36 : 28,
+      decoration: BoxDecoration(
+        color: kIOSGreen,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: isDragging ? 8 : 4,
+            color: Colors.black.withValues(alpha: 0.2),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Icon(Icons.pedal_bike, size: 14, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildEndMarker({bool isDragging = false}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: isDragging ? 36 : 28,
-          height: isDragging ? 36 : 28,
+          width: isDragging ? 34 : 28,
+          height: isDragging ? 34 : 28,
           decoration: BoxDecoration(
-            color: color,
+            color: kIOSRed,
             shape: BoxShape.circle,
-            border: Border.all(
-                color: Colors.white, width: isDragging ? 3 : 2.5),
+            border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
-                blurRadius: isDragging ? 12 : 6,
-                color: color.withValues(alpha: 0.6),
-              ),
-              BoxShadow(
                 blurRadius: isDragging ? 8 : 4,
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black.withValues(alpha: 0.2),
               ),
             ],
           ),
           child: Center(
             child: Text(
-              label,
-              style: TextStyle(
+              'B',
+              style: GoogleFonts.inter(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: isDragging ? 16 : 13,
+                fontWeight: FontWeight.w700,
+                fontSize: isDragging ? 14 : 12,
               ),
             ),
           ),
         ),
+        // Teardrop pin tail
         CustomPaint(
-          size: Size(12, isDragging ? 10 : 7),
-          painter: _TrianglePainter(color: color),
+          size: Size(10, isDragging ? 8 : 6),
+          painter: _TrianglePainter(color: kIOSRed),
         ),
       ],
+    );
+  }
+
+  Widget _buildWaypointMarker(String label, {bool isDragging = false}) {
+    return Container(
+      width: isDragging ? 32 : 26,
+      height: isDragging ? 32 : 26,
+      decoration: BoxDecoration(
+        color: kIOSOrange,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: isDragging ? 8 : 4,
+            color: Colors.black.withValues(alpha: 0.2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: isDragging ? 13 : 11,
+          ),
+        ),
+      ),
     );
   }
 
   Marker _draggableMarker({
     required LatLng point,
     required String label,
-    required Color color,
     required int markerIndex,
+    required Widget Function({bool isDragging}) buildMarker,
   }) {
     final active = _draggingMarkerIndex == markerIndex && _isDragging;
     return Marker(
@@ -237,8 +282,8 @@ class _MapScreenState extends State<MapScreen>
           final currentScreenPos =
               _mapController.camera.latLngToScreenOffset(point);
           final newScreenOffset = currentScreenPos + details.delta;
-          final newLatLng = _mapController.camera
-              .screenOffsetToLatLng(newScreenOffset);
+          final newLatLng =
+              _mapController.camera.screenOffsetToLatLng(newScreenOffset);
           final state = context.read<AppState>();
           if (markerIndex == -1) {
             state.updateStartPosition(newLatLng);
@@ -254,7 +299,7 @@ class _MapScreenState extends State<MapScreen>
             _draggingMarkerIndex = null;
           });
         },
-        child: _buildLabeledMarker(label, color, isDragging: active),
+        child: buildMarker(isDragging: active),
       ),
     );
   }
@@ -267,7 +312,7 @@ class _MapScreenState extends State<MapScreen>
 
     final markers = <Marker>[];
 
-    // Current location blue dot
+    // Current location blue dot - Apple Maps style
     if (state.currentLocation != null) {
       markers.add(Marker(
         point: state.currentLocation!,
@@ -275,48 +320,51 @@ class _MapScreenState extends State<MapScreen>
         height: 22,
         child: Container(
           decoration: BoxDecoration(
-            color: kAccentBlue,
+            color: kIOSBlue,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
-                blurRadius: 8,
-                color: kAccentBlue.withValues(alpha: 0.5),
+                blurRadius: 6,
+                color: kIOSBlue.withValues(alpha: 0.4),
               ),
-              const BoxShadow(blurRadius: 4, color: Colors.black45),
             ],
           ),
         ),
       ));
     }
 
-    // Start marker
+    // Start marker - green circle with bike icon
     if (state.startPoint != null) {
       markers.add(_draggableMarker(
         point: state.startPoint!.position,
         label: 'A',
-        color: kAccentGreen,
         markerIndex: -1,
+        buildMarker: ({bool isDragging = false}) =>
+            _buildStartMarker(isDragging: isDragging),
       ));
     }
 
     // Waypoints
     for (int i = 0; i < state.waypoints.length; i++) {
+      final wpLabel = state.waypoints[i].label;
       markers.add(_draggableMarker(
         point: state.waypoints[i].position,
-        label: state.waypoints[i].label,
-        color: Colors.orangeAccent,
+        label: wpLabel,
         markerIndex: i,
+        buildMarker: ({bool isDragging = false}) =>
+            _buildWaypointMarker(wpLabel, isDragging: isDragging),
       ));
     }
 
-    // End marker
+    // End marker - red teardrop pin
     if (state.endPoint != null) {
       markers.add(_draggableMarker(
         point: state.endPoint!.position,
         label: 'B',
-        color: kAccentBlue,
         markerIndex: -2,
+        buildMarker: ({bool isDragging = false}) =>
+            _buildEndMarker(isDragging: isDragging),
       ));
     }
 
@@ -329,15 +377,13 @@ class _MapScreenState extends State<MapScreen>
           height: 16,
           child: Container(
             decoration: BoxDecoration(
-              color: poi.type == 'repair'
-                  ? Colors.orangeAccent
-                  : kAccentGreen,
+              color: poi.type == 'repair' ? kIOSOrange : kIOSGreen,
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  blurRadius: 4,
-                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 3,
+                  color: Colors.black.withValues(alpha: 0.15),
                 ),
               ],
             ),
@@ -383,17 +429,17 @@ class _MapScreenState extends State<MapScreen>
               ),
             ),
             children: [
-              // Base tile layer
+              // Light map tiles - CartoDB Light (Apple Maps style)
               TileLayer(
                 urlTemplate: state.showBikeTrails
                     ? 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
-                    : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    : 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
                 subdomains: state.showBikeTrails
                     ? const ['a', 'b', 'c']
                     : const [],
                 userAgentPackageName: 'com.ebikerouteplanner.app',
               ),
-              // Heatmap overlay - popular cycling routes
+              // Heatmap overlay
               if (state.showHeatmap)
                 Opacity(
                   opacity: 0.6,
@@ -410,28 +456,21 @@ class _MapScreenState extends State<MapScreen>
                       point: state.currentLocation!,
                       radius: state.batteryConfig.rangeKm * 1000,
                       useRadiusInMeter: true,
-                      color: kAccentGreen.withValues(alpha: 0.06),
-                      borderColor:
-                          kAccentGreen.withValues(alpha: 0.3),
-                      borderStrokeWidth: 2,
+                      color: kIOSBlue.withValues(alpha: 0.06),
+                      borderColor: kIOSBlue.withValues(alpha: 0.2),
+                      borderStrokeWidth: 1.5,
                     ),
                   ],
                 ),
+              // Simple 4px blue route line (Apple Maps style)
               if (animatedRoutePoints != null &&
                   animatedRoutePoints.length >= 2)
                 PolylineLayer(
                   polylines: [
                     Polyline(
                       points: animatedRoutePoints,
-                      gradientColors: const [
-                        kAccentGreen,
-                        Color(0xFF00C4FF),
-                        kAccentBlue,
-                      ],
-                      strokeWidth: 5,
-                      borderColor:
-                          kNavyDark.withValues(alpha: 0.5),
-                      borderStrokeWidth: 2,
+                      color: kIOSBlue,
+                      strokeWidth: 4,
                     ),
                   ],
                 ),
@@ -515,22 +554,9 @@ class _RouteOptionsSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [kNavyMid, kNavyDark],
-        ),
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-              color: kAccentGreen.withValues(alpha: 0.2)),
-          left: BorderSide(
-              color: kAccentGreen.withValues(alpha: 0.1)),
-          right: BorderSide(
-              color: kAccentGreen.withValues(alpha: 0.1)),
-        ),
+      decoration: const BoxDecoration(
+        color: kIOSSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -539,10 +565,10 @@ class _RouteOptionsSheet extends StatelessWidget {
             const SizedBox(height: 10),
             // Drag handle
             Container(
-              width: 40,
+              width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: kIOSSeparator,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -554,14 +580,15 @@ class _RouteOptionsSheet extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.route,
-                          color: kAccentGreen, size: 22),
+                          color: kIOSBlue, size: 22),
                       const SizedBox(width: 10),
                       Text(
                         'Route Summary',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: GoogleFonts.inter(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: kIOSPrimaryText,
+                        ),
                       ),
                     ],
                   ),
@@ -577,10 +604,10 @@ class _RouteOptionsSheet extends StatelessWidget {
                     'Battery Usage',
                     '${batteryPct.toStringAsFixed(0)}%',
                     valueColor: batteryPct > 80
-                        ? Colors.redAccent
+                        ? kIOSRed
                         : batteryPct > 50
-                            ? Colors.orangeAccent
-                            : kAccentGreen,
+                            ? kIOSOrange
+                            : kIOSGreen,
                   ),
                   if (route.elevationGainM > 0)
                     _summaryRow(Icons.trending_up, 'Elevation Gain',
@@ -601,13 +628,8 @@ class _RouteOptionsSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color:
-                            Colors.white.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white
-                              .withValues(alpha: 0.06),
-                        ),
+                        color: kIOSBackground,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: ElevationChart(
                         profile: state.elevationProfile!,
@@ -621,33 +643,25 @@ class _RouteOptionsSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color:
-                            Colors.white.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white
-                              .withValues(alpha: 0.06),
-                        ),
+                        color: kIOSBackground,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white
-                                  .withValues(alpha: 0.5),
+                              color: kIOSSecondaryText,
                             ),
                           ),
                           const SizedBox(width: 10),
                           Text(
                             'Loading elevation...',
-                            style: TextStyle(
-                              color: Colors.white
-                                  .withValues(alpha: 0.5),
+                            style: GoogleFonts.inter(
+                              color: kIOSSecondaryText,
                               fontSize: 13,
                             ),
                           ),
@@ -736,7 +750,6 @@ class _RouteOptionsSheet extends StatelessWidget {
       );
       await Share.shareXFiles([xFile], text: 'eBike Route (GPX)');
     } catch (_) {
-      // Fallback: copy to clipboard
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -753,21 +766,17 @@ class _RouteOptionsSheet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon,
-              size: 20,
-              color: Colors.white.withValues(alpha: 0.5)),
+          Icon(icon, size: 20, color: kIOSSecondaryText),
           const SizedBox(width: 12),
           Expanded(
             child: Text(label,
-                style: TextStyle(
-                    color:
-                        Colors.white.withValues(alpha: 0.7))),
+                style: GoogleFonts.inter(color: kIOSSecondaryText)),
           ),
           Text(
             value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: valueColor ?? Colors.white,
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? kIOSPrimaryText,
             ),
           ),
         ],

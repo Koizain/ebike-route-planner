@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'screens/map_screen.dart';
 import 'screens/range_screen.dart';
 import 'screens/saved_routes_screen.dart';
 import 'services/app_state.dart';
 
-const kNavyDark = Color(0xFF0D1B2A);
-const kNavyMid = Color(0xFF1A2E45);
-const kNavyLight = Color(0xFF243B55);
-const kAccentGreen = Color(0xFF00E676);
-const kAccentBlue = Color(0xFF00B0FF);
+// iOS System Colors
+const kIOSBlue = Color(0xFF007AFF);
+const kIOSGreen = Color(0xFF34C759);
+const kIOSRed = Color(0xFFFF3B30);
+const kIOSOrange = Color(0xFFFF9500);
+const kIOSBackground = Color(0xFFF2F2F7);
+const kIOSSurface = Color(0xFFFFFFFF);
+const kIOSPrimaryText = Color(0xFF000000);
+const kIOSSecondaryText = Color(0xFF8E8E93);
+const kIOSSeparator = Color(0xFFC6C6C8);
 
 void main() {
   runApp(
@@ -25,63 +31,74 @@ class EBikeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = GoogleFonts.interTextTheme(
+      ThemeData.light().textTheme,
+    );
+
     return MaterialApp(
       title: 'eBike Route Planner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.dark(
-          primary: kAccentGreen,
-          secondary: kAccentBlue,
-          surface: kNavyDark,
-          onPrimary: kNavyDark,
+        colorScheme: ColorScheme.light(
+          primary: kIOSBlue,
+          secondary: kIOSGreen,
+          surface: kIOSSurface,
+          onPrimary: Colors.white,
           onSecondary: Colors.white,
-          onSurface: Colors.white,
+          onSurface: kIOSPrimaryText,
         ),
-        scaffoldBackgroundColor: kNavyDark,
+        scaffoldBackgroundColor: kIOSBackground,
         useMaterial3: true,
-        brightness: Brightness.dark,
+        brightness: Brightness.light,
+        textTheme: textTheme,
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
+          backgroundColor: kIOSSurface,
+          foregroundColor: kIOSPrimaryText,
           elevation: 0,
           centerTitle: true,
-          titleTextStyle: const TextStyle(
-            fontSize: 20,
+          surfaceTintColor: Colors.transparent,
+          titleTextStyle: GoogleFonts.inter(
+            fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
-            letterSpacing: 0.5,
+            color: kIOSPrimaryText,
           ),
         ),
         cardTheme: CardThemeData(
-          color: kNavyMid,
-          elevation: 4,
+          color: kIOSSurface,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: kNavyDark,
-          indicatorColor: kAccentGreen.withValues(alpha: 0.2),
+          backgroundColor: kIOSSurface,
+          surfaceTintColor: Colors.transparent,
+          indicatorColor: Colors.transparent,
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: kAccentGreen);
+              return const IconThemeData(color: kIOSBlue, size: 24);
             }
-            return const IconThemeData(color: Colors.white54);
+            return const IconThemeData(color: kIOSSecondaryText, size: 24);
           }),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return const TextStyle(
-                  color: kAccentGreen,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600);
+              return GoogleFonts.inter(
+                color: kIOSBlue,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              );
             }
-            return const TextStyle(color: Colors.white54, fontSize: 12);
+            return GoogleFonts.inter(
+              color: kIOSSecondaryText,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            );
           }),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            backgroundColor: kAccentGreen,
-            foregroundColor: kNavyDark,
+            backgroundColor: kIOSBlue,
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -89,8 +106,8 @@ class EBikeApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: kAccentGreen,
-            side: BorderSide(color: kAccentGreen.withValues(alpha: 0.5)),
+            foregroundColor: kIOSBlue,
+            side: const BorderSide(color: kIOSSeparator),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -98,29 +115,36 @@ class EBikeApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: kNavyLight.withValues(alpha: 0.5),
+          fillColor: kIOSBackground,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            borderSide: const BorderSide(color: kIOSSeparator),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            borderSide: const BorderSide(color: kIOSSeparator),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kAccentGreen),
+            borderSide: const BorderSide(color: kIOSBlue),
           ),
+          labelStyle: GoogleFonts.inter(color: kIOSSecondaryText),
+          hintStyle: GoogleFonts.inter(color: kIOSSecondaryText),
         ),
         dialogTheme: DialogThemeData(
-          backgroundColor: kNavyMid,
+          backgroundColor: kIOSSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          titleTextStyle: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: kIOSPrimaryText,
           ),
         ),
         snackBarTheme: SnackBarThemeData(
-          backgroundColor: kNavyLight,
-          contentTextStyle: const TextStyle(color: Colors.white),
+          backgroundColor: const Color(0xFF1C1C1E),
+          contentTextStyle: GoogleFonts.inter(color: Colors.white),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -149,11 +173,11 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         bottomNavigationBar: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 1,
+                color: kIOSSeparator,
+                width: 0.5,
               ),
             ),
           ),
@@ -176,6 +200,7 @@ class _BottomNav extends StatelessWidget {
         return NavigationBar(
           selectedIndex: tabController.index,
           onDestinationSelected: (i) => tabController.animateTo(i),
+          height: 56,
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.map_outlined),

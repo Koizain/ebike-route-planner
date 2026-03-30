@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
@@ -200,254 +200,216 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Search bar with glassmorphism
+        // Apple-style white pill search bar
         Container(
-          margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: kNavyDark.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          decoration: BoxDecoration(
+            color: kIOSSurface,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.12),
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // From field
+              Row(
+                children: [
+                  const SizedBox(width: 14),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: kIOSGreen,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 16,
-                      color: Colors.black.withValues(alpha: 0.4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // From field
-                    Row(
-                      children: [
-                        const SizedBox(width: 14),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: kAccentGreen,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: kAccentGreen
-                                    .withValues(alpha: 0.5),
-                                blurRadius: 6,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _fromController,
+                      focusNode: _fromFocus,
+                      onChanged: _onFromChanged,
+                      onTap: () {
+                        if (_fromController.text.isEmpty) {
+                          setState(() {
+                            _fromResults = _recentSearches;
+                            _showFromResults =
+                                _recentSearches.isNotEmpty;
+                          });
+                        }
+                      },
+                      style: GoogleFonts.inter(
+                          fontSize: 15, color: kIOSPrimaryText),
+                      decoration: InputDecoration(
+                        hintText: 'Start location',
+                        hintStyle: GoogleFonts.inter(
+                            color: kIOSSecondaryText, fontSize: 15),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_fromController.text.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  _fromController.clear();
+                                  setState(
+                                      () => _showFromResults = false);
+                                },
+                                child: const Icon(Icons.close,
+                                    size: 18,
+                                    color: kIOSSecondaryText),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _fromController,
-                            focusNode: _fromFocus,
-                            onChanged: _onFromChanged,
-                            onTap: () {
-                              if (_fromController.text.isEmpty) {
-                                setState(() {
-                                  _fromResults = _recentSearches;
-                                  _showFromResults =
-                                      _recentSearches.isNotEmpty;
-                                });
-                              }
-                            },
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'Start location',
-                              hintStyle: TextStyle(
-                                  color: Colors.white
-                                      .withValues(alpha: 0.35),
-                                  fontSize: 14),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(
-                                      vertical: 12),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (_fromController
-                                      .text.isNotEmpty)
-                                    GestureDetector(
-                                      onTap: () {
-                                        _fromController.clear();
-                                        setState(() =>
-                                            _showFromResults =
-                                                false);
-                                      },
-                                      child: const Icon(
-                                          Icons.close,
-                                          size: 18,
-                                          color: Colors.white38),
-                                    ),
-                                  const SizedBox(width: 4),
-                                  GestureDetector(
-                                    onTap: _useMyLocation,
-                                    child: Icon(
-                                        Icons.my_location,
-                                        size: 18,
-                                        color: kAccentBlue),
-                                  ),
-                                  const SizedBox(width: 10),
-                                ],
-                              ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: _useMyLocation,
+                              child: const Icon(Icons.my_location,
+                                  size: 18, color: kIOSBlue),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                          ],
                         ),
-                      ],
-                    ),
-                    // Divider with swap button
-                    Row(
-                      children: [
-                        const SizedBox(width: 34),
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            color: Colors.white
-                                .withValues(alpha: 0.08),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _swapStartEnd,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            child: const Icon(Icons.swap_vert,
-                                size: 20,
-                                color: Colors.white54),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                      ],
-                    ),
-                    // To field
-                    Row(
-                      children: [
-                        const SizedBox(width: 14),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: kAccentBlue,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: kAccentBlue
-                                    .withValues(alpha: 0.5),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _toController,
-                            focusNode: _toFocus,
-                            onChanged: _onToChanged,
-                            onTap: () {
-                              if (_toController.text.isEmpty) {
-                                setState(() {
-                                  _toResults = _recentSearches;
-                                  _showToResults =
-                                      _recentSearches.isNotEmpty;
-                                });
-                              }
-                            },
-                            style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'Destination',
-                              hintStyle: TextStyle(
-                                  color: Colors.white
-                                      .withValues(alpha: 0.35),
-                                  fontSize: 14),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(
-                                      vertical: 12),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (_toController
-                                      .text.isNotEmpty)
-                                    GestureDetector(
-                                      onTap: () {
-                                        _toController.clear();
-                                        setState(() =>
-                                            _showToResults =
-                                                false);
-                                      },
-                                      child: const Icon(
-                                          Icons.close,
-                                          size: 18,
-                                          color: Colors.white38),
-                                    ),
-                                  const SizedBox(width: 4),
-                                  GestureDetector(
-                                    onTap: _searchNearMe,
-                                    child: Icon(Icons.near_me,
-                                        size: 18,
-                                        color: kAccentBlue),
-                                  ),
-                                  const SizedBox(width: 10),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    // Route type selector
-                    Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                      child: Row(
-                        children: [
-                          _routeTypeButton(
-                            icon: Icons.pedal_bike,
-                            label: 'Bike',
-                            type: RouteType.bike,
-                            current: state.routeType,
-                          ),
-                          const SizedBox(width: 6),
-                          _routeTypeButton(
-                            icon: Icons.electric_bike,
-                            label: 'eBike',
-                            type: RouteType.ebike,
-                            current: state.routeType,
-                          ),
-                          const SizedBox(width: 6),
-                          _routeTypeButton(
-                            icon: Icons.terrain,
-                            label: 'MTB',
-                            type: RouteType.mountain,
-                            current: state.routeType,
-                          ),
-                        ],
                       ),
+                    ),
+                  ),
+                ],
+              ),
+              // Divider with swap button
+              Row(
+                children: [
+                  const SizedBox(width: 34),
+                  Expanded(
+                    child: Container(
+                      height: 0.5,
+                      color: kIOSSeparator,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _swapStartEnd,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        color: kIOSBlue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.swap_vert,
+                          size: 18, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
+              // To field
+              Row(
+                children: [
+                  const SizedBox(width: 14),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: kIOSRed,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _toController,
+                      focusNode: _toFocus,
+                      onChanged: _onToChanged,
+                      onTap: () {
+                        if (_toController.text.isEmpty) {
+                          setState(() {
+                            _toResults = _recentSearches;
+                            _showToResults =
+                                _recentSearches.isNotEmpty;
+                          });
+                        }
+                      },
+                      style: GoogleFonts.inter(
+                          fontSize: 15, color: kIOSPrimaryText),
+                      decoration: InputDecoration(
+                        hintText: 'Destination',
+                        hintStyle: GoogleFonts.inter(
+                            color: kIOSSecondaryText, fontSize: 15),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_toController.text.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  _toController.clear();
+                                  setState(
+                                      () => _showToResults = false);
+                                },
+                                child: const Icon(Icons.close,
+                                    size: 18,
+                                    color: kIOSSecondaryText),
+                              ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: _searchNearMe,
+                              child: const Icon(Icons.near_me,
+                                  size: 18, color: kIOSBlue),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              // Route type selector
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: Row(
+                  children: [
+                    _routeTypeButton(
+                      icon: Icons.pedal_bike,
+                      label: 'Bike',
+                      type: RouteType.bike,
+                      current: state.routeType,
+                    ),
+                    const SizedBox(width: 6),
+                    _routeTypeButton(
+                      icon: Icons.electric_bike,
+                      label: 'eBike',
+                      type: RouteType.ebike,
+                      current: state.routeType,
+                    ),
+                    const SizedBox(width: 6),
+                    _routeTypeButton(
+                      icon: Icons.terrain,
+                      label: 'MTB',
+                      type: RouteType.mountain,
+                      current: state.routeType,
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
         ),
-        // From results dropdown with animation
+        // From results dropdown
         AnimatedSize(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
@@ -456,7 +418,7 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                   isRecent: _fromController.text.isEmpty)
               : const SizedBox(width: double.infinity, height: 0),
         ),
-        // To results dropdown with animation
+        // To results dropdown
         AnimatedSize(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
@@ -484,13 +446,12 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: selected
-                ? kAccentGreen.withValues(alpha: 0.2)
-                : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(10),
+                ? kIOSBlue.withValues(alpha: 0.12)
+                : kIOSBackground,
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: selected
-                  ? kAccentGreen.withValues(alpha: 0.6)
-                  : Colors.transparent,
+              color: selected ? kIOSBlue : Colors.transparent,
+              width: 1,
             ),
           ),
           child: Row(
@@ -498,18 +459,15 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
             children: [
               Icon(icon,
                   size: 16,
-                  color:
-                      selected ? kAccentGreen : Colors.white54),
+                  color: selected ? kIOSBlue : kIOSSecondaryText),
               const SizedBox(width: 4),
               Text(
                 label,
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 11,
-                  fontWeight: selected
-                      ? FontWeight.w600
-                      : FontWeight.normal,
-                  color:
-                      selected ? kAccentGreen : Colors.white54,
+                  fontWeight:
+                      selected ? FontWeight.w600 : FontWeight.normal,
+                  color: selected ? kIOSBlue : kIOSSecondaryText,
                 ),
               ),
             ],
@@ -523,27 +481,24 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
       List<SearchResult> results, void Function(SearchResult) onSelect,
       {bool isRecent = false}) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 2, 12, 0),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
       constraints: const BoxConstraints(maxHeight: 200),
       decoration: BoxDecoration(
-        color: kNavyMid.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(14),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: kIOSSurface,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              blurRadius: 12,
-              color: Colors.black.withValues(alpha: 0.4)),
+              blurRadius: 8,
+              color: Colors.black.withValues(alpha: 0.12),
+              offset: const Offset(0, 2)),
         ],
       ),
       child: ListView.separated(
         shrinkWrap: true,
         padding: const EdgeInsets.symmetric(vertical: 4),
         itemCount: results.length,
-        separatorBuilder: (_, __) => Divider(
-            height: 1,
-            indent: 40,
-            color: Colors.white.withValues(alpha: 0.06)),
+        separatorBuilder: (_, __) => const Divider(
+            height: 1, indent: 40, color: kIOSSeparator),
         itemBuilder: (context, index) {
           final result = results[index];
           return ListTile(
@@ -551,22 +506,19 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
             leading: Icon(
               isRecent ? Icons.history : Icons.place,
               size: 18,
-              color: isRecent
-                  ? Colors.white.withValues(alpha: 0.4)
-                  : kAccentGreen.withValues(alpha: 0.6),
+              color: isRecent ? kIOSSecondaryText : kIOSBlue,
             ),
             title: Text(
               _shortName(result.name),
-              style: const TextStyle(
-                  fontSize: 13, color: Colors.white),
+              style: GoogleFonts.inter(
+                  fontSize: 14, color: kIOSPrimaryText),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
               result.name,
-              style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.35)),
+              style: GoogleFonts.inter(
+                  fontSize: 12, color: kIOSSecondaryText),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

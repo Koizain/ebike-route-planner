@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../services/app_state.dart';
@@ -18,14 +19,14 @@ class RouteInfoPanel extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
+              const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: kAccentGreen)),
+                      strokeWidth: 2, color: kIOSBlue)),
               const SizedBox(width: 12),
-              const Text('Calculating route...',
-                  style: TextStyle(color: Colors.white70)),
+              Text('Calculating route...',
+                  style: GoogleFonts.inter(color: kIOSSecondaryText)),
             ],
           ));
     }
@@ -35,11 +36,11 @@ class RouteInfoPanel extends StatelessWidget {
           child: Row(
             children: [
               const Icon(Icons.error_outline,
-                  color: Colors.redAccent, size: 18),
+                  color: kIOSRed, size: 18),
               const SizedBox(width: 8),
               Expanded(
                   child: Text(state.routeError!,
-                      style: const TextStyle(color: Colors.redAccent))),
+                      style: GoogleFonts.inter(color: kIOSRed))),
             ],
           ));
     }
@@ -62,22 +63,34 @@ class RouteInfoPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Stats row - large numbers iOS style
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _stat(Icons.straighten,
-                      '${distKm.toStringAsFixed(1)} km', 'Distance'),
-                  _stat(Icons.schedule,
-                      '${durMin.toStringAsFixed(0)} min', 'Duration'),
                   _stat(
-                    Icons.battery_charging_full,
+                    distKm.toStringAsFixed(1),
+                    'km',
+                    'Distance',
+                  ),
+                  Container(
+                      width: 0.5, height: 40, color: kIOSSeparator),
+                  _stat(
+                    durMin.toStringAsFixed(0),
+                    'min',
+                    'Duration',
+                  ),
+                  Container(
+                      width: 0.5, height: 40, color: kIOSSeparator),
+                  _stat(
                     '${batteryPct.toStringAsFixed(0)}%',
+                    '',
                     'Battery',
                     color: batteryPct > 80
-                        ? Colors.redAccent
+                        ? kIOSRed
                         : batteryPct > 50
-                            ? Colors.orangeAccent
-                            : kAccentGreen,
+                            ? kIOSOrange
+                            : kIOSGreen,
+                    icon: Icons.battery_charging_full,
                   ),
                 ],
               ),
@@ -87,43 +100,43 @@ class RouteInfoPanel extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: kAccentGreen.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: kIOSBackground,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.access_time,
-                        size: 16, color: kAccentGreen),
+                    const Icon(Icons.access_time,
+                        size: 14, color: kIOSSecondaryText),
                     const SizedBox(width: 6),
                     Text(
                       'Arrive at ~$etaStr',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: kAccentGreen,
+                        fontWeight: FontWeight.w500,
+                        color: kIOSPrimaryText,
                       ),
                     ),
                     if (route.elevationGainM > 0) ...[
                       const SizedBox(width: 16),
                       const Icon(Icons.trending_up,
-                          size: 14, color: Colors.orangeAccent),
+                          size: 14, color: kIOSOrange),
                       const SizedBox(width: 3),
                       Text(
                         '${route.elevationGainM.toStringAsFixed(0)}m',
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.orangeAccent),
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: kIOSOrange),
                       ),
                     ],
                     if (route.elevationLossM > 0) ...[
                       const SizedBox(width: 8),
-                      Icon(Icons.trending_down,
-                          size: 14, color: kAccentBlue),
+                      const Icon(Icons.trending_down,
+                          size: 14, color: kIOSBlue),
                       const SizedBox(width: 3),
                       Text(
                         '${route.elevationLossM.toStringAsFixed(0)}m',
-                        style: TextStyle(
-                            fontSize: 12, color: kAccentBlue),
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: kIOSBlue),
                       ),
                     ],
                   ],
@@ -139,24 +152,24 @@ class RouteInfoPanel extends StatelessWidget {
                 children: [
                   Expanded(
                     child: SizedBox(
-                      height: 34,
+                      height: 36,
                       child: OutlinedButton.icon(
                         onPressed: () => _saveRoute(context, state),
                         icon: const Icon(Icons.bookmark_add, size: 16),
-                        label: const Text('Save',
-                            style: TextStyle(fontSize: 12)),
+                        label: Text('Save',
+                            style: GoogleFonts.inter(fontSize: 13)),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: SizedBox(
-                      height: 34,
+                      height: 36,
                       child: FilledButton.icon(
                         onPressed: onRouteOptionsTap,
                         icon: const Icon(Icons.tune, size: 16),
-                        label: const Text('Details',
-                            style: TextStyle(fontSize: 12)),
+                        label: Text('Details',
+                            style: GoogleFonts.inter(fontSize: 13)),
                       ),
                     ),
                   ),
@@ -212,23 +225,13 @@ class RouteInfoPanel extends StatelessWidget {
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            kNavyMid.withValues(alpha: 0.95),
-            kNavyDark.withValues(alpha: 0.95),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: kAccentGreen.withValues(alpha: 0.15),
-        ),
+        color: kIOSSurface,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            blurRadius: 16,
-            color: Colors.black.withValues(alpha: 0.4),
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.12),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -236,22 +239,32 @@ class RouteInfoPanel extends StatelessWidget {
     );
   }
 
-  Widget _stat(IconData icon, String value, String label,
-      {Color? color}) {
+  Widget _stat(String value, String unit, String label,
+      {Color? color, IconData? icon}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color ?? kAccentGreen, size: 22),
-        const SizedBox(height: 3),
-        Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: color ?? Colors.white)),
+        if (icon != null)
+          Icon(icon, color: color ?? kIOSBlue, size: 18),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(value,
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                    color: color ?? kIOSPrimaryText)),
+            if (unit.isNotEmpty)
+              Text(' $unit',
+                  style: GoogleFonts.inter(
+                      fontSize: 13, color: kIOSSecondaryText)),
+          ],
+        ),
         Text(label,
-            style: TextStyle(
-                fontSize: 11,
-                color: Colors.white.withValues(alpha: 0.5))),
+            style: GoogleFonts.inter(
+                fontSize: 12, color: kIOSSecondaryText)),
       ],
     );
   }
@@ -262,16 +275,16 @@ class RouteInfoPanel extends StatelessWidget {
     String label;
     switch (difficulty) {
       case 'easy':
-        color = kAccentGreen;
+        color = kIOSGreen;
         label = 'Easy';
       case 'moderate':
-        color = Colors.amber;
+        color = kIOSOrange;
         label = 'Moderate';
       case 'challenging':
-        color = Colors.orange;
+        color = kIOSOrange;
         label = 'Challenging';
       case 'hard':
-        color = Colors.redAccent;
+        color = kIOSRed;
         label = 'Hard';
       default:
         return const SizedBox.shrink();
@@ -280,9 +293,8 @@ class RouteInfoPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -290,7 +302,7 @@ class RouteInfoPanel extends StatelessWidget {
           Icon(Icons.terrain, size: 14, color: color),
           const SizedBox(width: 4),
           Text(label,
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: color,

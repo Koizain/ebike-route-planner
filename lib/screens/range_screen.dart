@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../services/app_state.dart';
@@ -88,20 +89,13 @@ class _RangeScreenState extends State<RangeScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.battery_charging_full,
-                color: kAccentGreen, size: 22),
+            const Icon(Icons.battery_charging_full,
+                color: kIOSGreen, size: 22),
             const SizedBox(width: 8),
-            const Text('Battery Range'),
+            Text('Battery Range',
+                style: GoogleFonts.inter(
+                    fontSize: 17, fontWeight: FontWeight.w600)),
           ],
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [kNavyDark, kNavyMid],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -112,46 +106,37 @@ class _RangeScreenState extends State<RangeScreen> {
             // Range summary card
             Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [kNavyMid, kNavyLight],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: kAccentGreen.withValues(alpha: 0.2),
-                ),
+                color: kIOSSurface,
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    blurRadius: 16,
-                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.08),
                   ),
                 ],
               ),
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  Icon(Icons.battery_charging_full,
-                      size: 48, color: kAccentGreen),
+                  const Icon(Icons.battery_charging_full,
+                      size: 48, color: kIOSGreen),
                   const SizedBox(height: 8),
                   Text(
                     '${rangeKm.toStringAsFixed(1)} km',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineLarge
-                        ?.copyWith(
-                          color: kAccentGreen,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: GoogleFonts.inter(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w700,
+                      color: kIOSGreen,
+                    ),
                   ),
                   Text('Estimated Range',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6))),
+                      style: GoogleFonts.inter(
+                          color: kIOSSecondaryText, fontSize: 15)),
                   const SizedBox(height: 8),
                   Text(
                     'A range circle is shown on the map from your current location',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.4)),
+                    style: GoogleFonts.inter(
+                        color: kIOSSecondaryText, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -159,28 +144,33 @@ class _RangeScreenState extends State<RangeScreen> {
             ),
             const SizedBox(height: 24),
             Text('eBike Preset',
-                style: Theme.of(context).textTheme.titleMedium),
+                style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: kIOSPrimaryText)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _selectedPreset,
               decoration: InputDecoration(
                 filled: true,
+                fillColor: kIOSSurface,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: kIOSSeparator)),
                 prefixIcon:
-                    const Icon(Icons.electric_bike, color: kAccentGreen),
+                    const Icon(Icons.electric_bike, color: kIOSBlue),
               ),
-              dropdownColor: kNavyMid,
+              dropdownColor: kIOSSurface,
               items: [
                 ..._presets.map((p) => DropdownMenuItem(
                       value: p.name,
                       child: Text(p.name,
-                          style: const TextStyle(fontSize: 14)),
+                          style: GoogleFonts.inter(fontSize: 14)),
                     )),
-                const DropdownMenuItem(
+                DropdownMenuItem(
                   value: 'Custom',
-                  child:
-                      Text('Custom', style: TextStyle(fontSize: 14)),
+                  child: Text('Custom',
+                      style: GoogleFonts.inter(fontSize: 14)),
                 ),
               ],
               onChanged: (val) {
@@ -195,7 +185,10 @@ class _RangeScreenState extends State<RangeScreen> {
             ),
             const SizedBox(height: 16),
             Text('Battery Settings',
-                style: Theme.of(context).textTheme.titleMedium),
+                style: GoogleFonts.inter(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: kIOSPrimaryText)),
             const SizedBox(height: 16),
             _buildField(
               controller: _capacityCtrl,
@@ -213,8 +206,8 @@ class _RangeScreenState extends State<RangeScreen> {
             const SizedBox(height: 8),
             Text(
               'Typical eBike: 10-20 Wh/km depending on terrain, speed, and assist level',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.4)),
+              style: GoogleFonts.inter(
+                  color: kIOSSecondaryText, fontSize: 13),
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
@@ -244,10 +237,12 @@ class _RangeScreenState extends State<RangeScreen> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: kAccentGreen),
+        prefixIcon: Icon(icon, color: kIOSBlue),
         filled: true,
+        fillColor: kIOSSurface,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12)),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kIOSSeparator)),
       ),
       onChanged: (_) {
         setState(() => _selectedPreset = 'Custom');

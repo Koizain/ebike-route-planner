@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../main.dart';
 import '../models/route_point.dart';
 
 class ElevationChart extends StatelessWidget {
@@ -23,20 +25,21 @@ class ElevationChart extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.terrain, size: 18, color: Color(0xFF00E676)),
+            const Icon(Icons.terrain, size: 18, color: kIOSBlue),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Elevation Profile',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: Colors.white,
+                color: kIOSPrimaryText,
               ),
             ),
             const Spacer(),
             Text(
               '${profile.distances.last.toStringAsFixed(1)} km',
-              style: const TextStyle(fontSize: 12, color: Colors.white54),
+              style: GoogleFonts.inter(
+                  fontSize: 12, color: kIOSSecondaryText),
             ),
           ],
         ),
@@ -82,7 +85,8 @@ class ElevationChart extends StatelessWidget {
       children: labels
           .map((d) => Text(
                 '${d.toStringAsFixed(d == d.roundToDouble() ? 0 : 1)} km',
-                style: const TextStyle(fontSize: 10, color: Colors.white38),
+                style: GoogleFonts.inter(
+                    fontSize: 10, color: kIOSSecondaryText),
               ))
           .toList(),
     );
@@ -107,7 +111,8 @@ class _ElevationPainter extends CustomPainter {
     final elevRange = maxElev - minElev;
     if (elevRange == 0 || maxDist == 0) return;
 
-    final padding = const EdgeInsets.only(left: 30, right: 8, top: 8, bottom: 4);
+    final padding =
+        const EdgeInsets.only(left: 30, right: 8, top: 8, bottom: 4);
     final chartW = size.width - padding.left - padding.right;
     final chartH = size.height - padding.top - padding.bottom;
 
@@ -117,19 +122,21 @@ class _ElevationPainter extends CustomPainter {
 
     // Grid lines
     final gridPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
+      ..color = const Color(0xFFE5E5EA) // iOS light separator
       ..strokeWidth = 0.5;
 
     final gridCount = 4;
     for (int i = 0; i <= gridCount; i++) {
       final y = padding.top + (chartH / gridCount) * i;
-      canvas.drawLine(Offset(padding.left, y), Offset(size.width - padding.right, y), gridPaint);
+      canvas.drawLine(Offset(padding.left, y),
+          Offset(size.width - padding.right, y), gridPaint);
 
       final elev = maxElev - (elevRange / gridCount) * i;
       final textPainter = TextPainter(
         text: TextSpan(
           text: '${elev.toStringAsFixed(0)}m',
-          style: const TextStyle(fontSize: 9, color: Colors.white38),
+          style: const TextStyle(
+              fontSize: 9, color: Color(0xFF8E8E93)), // iOS secondary
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -154,15 +161,16 @@ class _ElevationPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFF00E676).withValues(alpha: 0.4),
-          const Color(0xFF00E676).withValues(alpha: 0.05),
+          const Color(0xFF007AFF).withValues(alpha: 0.25),
+          const Color(0xFF007AFF).withValues(alpha: 0.05),
         ],
-      ).createShader(Rect.fromLTWH(0, padding.top, size.width, chartH));
+      ).createShader(
+          Rect.fromLTWH(0, padding.top, size.width, chartH));
     canvas.drawPath(fillPath, fillPaint);
 
     // Line
     final linePaint = Paint()
-      ..color = const Color(0xFF00E676)
+      ..color = const Color(0xFF007AFF)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -180,9 +188,11 @@ class _ElevationPainter extends CustomPainter {
         }
       }
       final t = (distances[idx + 1] - distances[idx]) > 0
-          ? (progress - distances[idx]) / (distances[idx + 1] - distances[idx])
+          ? (progress - distances[idx]) /
+              (distances[idx + 1] - distances[idx])
           : 0.0;
-      final elev = elevations[idx] + (elevations[idx + 1] - elevations[idx]) * t;
+      final elev =
+          elevations[idx] + (elevations[idx + 1] - elevations[idx]) * t;
       final cx = toX(progress);
       final cy = toY(elev);
 
@@ -194,7 +204,7 @@ class _ElevationPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(cx, cy),
         3.5,
-        Paint()..color = const Color(0xFF00E676),
+        Paint()..color = const Color(0xFF007AFF),
       );
     }
   }

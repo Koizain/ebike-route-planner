@@ -36,7 +36,7 @@ class MapControls extends StatelessWidget {
           tooltip: 'Popular Routes',
           icon: Icons.local_fire_department,
           isActive: state.showHeatmap,
-          activeColor: Colors.orangeAccent,
+          activeColor: kIOSOrange,
         ),
         const SizedBox(height: 8),
         _controlButton(
@@ -51,7 +51,7 @@ class MapControls extends StatelessWidget {
           heroTag: 'favorites',
           onPressed: onFavoritesTap,
           tooltip: 'Favorites',
-          icon: Icons.favorite,
+          icon: Icons.favorite_outline,
           isActive: false,
         ),
         const SizedBox(height: 8),
@@ -61,14 +61,14 @@ class MapControls extends StatelessWidget {
           tooltip: state.isTracking ? 'Stop Tracking' : 'Start Tracking',
           icon: state.isTracking ? Icons.stop : Icons.gps_fixed,
           isActive: state.isTracking,
-          activeColor: Colors.redAccent,
+          activeColor: kIOSRed,
         ),
         const SizedBox(height: 8),
         _controlButton(
           heroTag: 'compass',
           onPressed: () => state.toggleHeadingUp(),
           tooltip: state.headingUp ? 'North Up' : 'Heading Up',
-          icon: Icons.explore,
+          icon: Icons.explore_outlined,
           isActive: state.headingUp,
         ),
         const SizedBox(height: 8),
@@ -91,25 +91,20 @@ class MapControls extends StatelessWidget {
     required bool isActive,
     Color? activeColor,
   }) {
-    final color = activeColor ?? kAccentGreen;
-    return FloatingActionButton.small(
-      heroTag: heroTag,
-      onPressed: onPressed,
-      tooltip: tooltip,
-      backgroundColor: isActive
-          ? color.withValues(alpha: 0.9)
-          : kNavyMid.withValues(alpha: 0.9),
-      foregroundColor: isActive ? Colors.white : Colors.white70,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isActive
-              ? color.withValues(alpha: 0.6)
-              : Colors.white.withValues(alpha: 0.1),
-        ),
+    final color = activeColor ?? kIOSBlue;
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: FloatingActionButton(
+        heroTag: heroTag,
+        onPressed: onPressed,
+        tooltip: tooltip,
+        elevation: 2,
+        backgroundColor: isActive ? color : kIOSSurface,
+        foregroundColor: isActive ? Colors.white : kIOSPrimaryText,
+        shape: const CircleBorder(),
+        child: Icon(icon, size: 20),
       ),
-      child: Icon(icon, size: 20),
     );
   }
 }
