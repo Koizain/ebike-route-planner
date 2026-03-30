@@ -510,7 +510,7 @@ class _MapScreenState extends State<MapScreen>
           Positioned(
             right: 12,
             bottom: state.isTracking ? 160 : 90,
-            child: MapControls(onFavoritesTap: _showFavorites),
+            child: const MapControls(),
           ),
         ],
       ),
