@@ -31,6 +31,15 @@ class MapControls extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _controlButton(
+          heroTag: 'heatmap',
+          onPressed: () => state.toggleHeatmap(),
+          tooltip: 'Popular Routes',
+          icon: Icons.local_fire_department,
+          isActive: state.showHeatmap,
+          activeColor: Colors.orangeAccent,
+        ),
+        const SizedBox(height: 8),
+        _controlButton(
           heroTag: 'pois',
           onPressed: () => state.togglePois(),
           tooltip: 'Bike POIs',
@@ -53,6 +62,14 @@ class MapControls extends StatelessWidget {
           icon: state.isTracking ? Icons.stop : Icons.gps_fixed,
           isActive: state.isTracking,
           activeColor: Colors.redAccent,
+        ),
+        const SizedBox(height: 8),
+        _controlButton(
+          heroTag: 'compass',
+          onPressed: () => state.toggleHeadingUp(),
+          tooltip: state.headingUp ? 'North Up' : 'Heading Up',
+          icon: Icons.explore,
+          isActive: state.headingUp,
         ),
         const SizedBox(height: 8),
         _controlButton(

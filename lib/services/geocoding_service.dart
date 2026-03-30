@@ -35,13 +35,23 @@ class GeocodingService {
     'User-Agent': 'eBikeRoutePlanner/1.0',
   };
 
-  Future<List<SearchResult>> searchAddress(String query) async {
+  Future<List<SearchResult>> searchAddress(String query,
+      {LatLng? nearLocation}) async {
     if (query.trim().isEmpty) return [];
 
-    final url = Uri.parse(
-      '$_baseUrl/search?q=${Uri.encodeComponent(query)}'
-      '&format=json&limit=5&countrycodes=lt,lv,ee,pl,de',
-    );
+    var urlStr = '$_baseUrl/search?q=${Uri.encodeComponent(query)}'
+        '&format=json&limit=5';
+    if (nearLocation != null) {
+      final lat = nearLocation.latitude;
+      final lng = nearLocation.longitude;
+      urlStr +=
+          '&viewbox=${lng - 0.05},${lat + 0.05},${lng + 0.05},${lat - 0.05}'
+          '&bounded=1';
+    } else {
+      urlStr += '&countrycodes=lt,lv,ee,pl,de';
+    }
+
+    final url = Uri.parse(urlStr);
 
     try {
       final response = await http

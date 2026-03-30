@@ -30,6 +30,24 @@ class ElevationProfile {
   const ElevationProfile({required this.elevations, required this.distances});
 }
 
+enum ManeuverDirection { left, right, straight, roundabout, arrive, depart, unknown }
+
+class Maneuver {
+  final String instruction;
+  final ManeuverDirection direction;
+  final double distanceKm;
+  final String streetName;
+  final LatLng location;
+
+  const Maneuver({
+    required this.instruction,
+    required this.direction,
+    required this.distanceKm,
+    required this.streetName,
+    required this.location,
+  });
+}
+
 class RouteResult {
   final List<LatLng> points;
   final double distanceKm;
@@ -37,6 +55,7 @@ class RouteResult {
   final double elevationGainM;
   final double elevationLossM;
   final List<String> instructions;
+  final List<Maneuver> maneuvers;
   final String routingEngine;
 
   const RouteResult({
@@ -46,6 +65,7 @@ class RouteResult {
     this.elevationGainM = 0,
     this.elevationLossM = 0,
     this.instructions = const [],
+    this.maneuvers = const [],
     this.routingEngine = 'osrm',
   });
 
@@ -60,6 +80,7 @@ class RouteResult {
       elevationGainM: elevationGainM ?? this.elevationGainM,
       elevationLossM: elevationLossM ?? this.elevationLossM,
       instructions: instructions,
+      maneuvers: maneuvers,
       routingEngine: routingEngine,
     );
   }

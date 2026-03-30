@@ -53,6 +53,25 @@ class RoutingService {
     }
   }
 
+  static ManeuverDirection _parseDirection(String instruction) {
+    final lower = instruction.toLowerCase();
+    if (lower.contains('roundabout')) return ManeuverDirection.roundabout;
+    if (lower.contains('left')) return ManeuverDirection.left;
+    if (lower.contains('right')) return ManeuverDirection.right;
+    if (lower.contains('straight') ||
+        lower.contains('continue') ||
+        lower.contains('head')) {
+      return ManeuverDirection.straight;
+    }
+    if (lower.contains('arrive') || lower.contains('destination')) {
+      return ManeuverDirection.arrive;
+    }
+    if (lower.contains('depart') || lower.contains('start')) {
+      return ManeuverDirection.depart;
+    }
+    return ManeuverDirection.unknown;
+  }
+
   Future<RouteResult?> _getValhallaRoute(
       List<LatLng> stops, RouteType routeType) async {
     final locations = stops
@@ -85,10 +104,12 @@ class RoutingService {
 
       final List<LatLng> allPoints = [];
       final List<String> allInstructions = [];
+      final List<Maneuver> allManeuvers = [];
 
       for (final leg in legs) {
         final shape = leg['shape'] as String;
         final points = _decodePolyline(shape);
+
         if (allPoints.isNotEmpty && points.isNotEmpty) {
           allPoints.addAll(points.skip(1));
         } else {
@@ -97,10 +118,25 @@ class RoutingService {
 
         final maneuvers = leg['maneuvers'] as List? ?? [];
         for (final m in maneuvers) {
-          final instruction = m['instruction'] as String?;
-          if (instruction != null && instruction.isNotEmpty) {
-            allInstructions.add(instruction);
-          }
+          final instruction = m['instruction'] as String? ?? '';
+          if (instruction.isEmpty) continue;
+
+          allInstructions.add(instruction);
+
+          final beginIdx = m['begin_shape_index'] as int? ?? 0;
+          final length = (m['length'] as num?)?.toDouble() ?? 0;
+          final streets =
+              (m['street_names'] as List?)?.cast<String>() ?? [];
+          final loc =
+              beginIdx < points.length ? points[beginIdx] : points.last;
+
+          allManeuvers.add(Maneuver(
+            instruction: instruction,
+            direction: _parseDirection(instruction),
+            distanceKm: length,
+            streetName: streets.isNotEmpty ? streets.first : '',
+            location: loc,
+          ));
         }
       }
 
@@ -113,6 +149,7 @@ class RoutingService {
         distanceKm: distanceKm,
         durationMin: durationSec / 60,
         instructions: allInstructions,
+        maneuvers: allManeuvers,
         routingEngine: 'valhalla',
       );
     } catch (e) {
@@ -147,20 +184,47 @@ class RoutingService {
           .toList();
 
       final List<String> instructions = [];
+      final List<Maneuver> routeManeuvers = [];
       final legs = route['legs'] as List? ?? [];
       for (final leg in legs) {
         final steps = leg['steps'] as List? ?? [];
         for (final step in steps) {
           final maneuver = step['maneuver'] as Map<String, dynamic>?;
           final name = step['name'] as String? ?? '';
+          final distance = (step['distance'] as num?)?.toDouble() ?? 0;
           if (maneuver != null) {
             final type = maneuver['type'] as String? ?? '';
             final modifier = maneuver['modifier'] as String? ?? '';
+            final loc = maneuver['location'] as List?;
+
+            String instruction;
             if (type == 'arrive') {
-              instructions.add('Arrive at destination');
+              instruction = 'Arrive at destination';
             } else if (name.isNotEmpty) {
-              instructions.add(
-                  '${_capitalize(type)} ${modifier.isNotEmpty ? "$modifier " : ""}onto $name');
+              instruction =
+                  '${_capitalize(type)} ${modifier.isNotEmpty ? "$modifier " : ""}onto $name';
+            } else {
+              instruction = '${_capitalize(type)} $modifier'.trim();
+            }
+
+            if (instruction.isNotEmpty) {
+              instructions.add(instruction);
+
+              LatLng maneuverLoc;
+              if (loc != null && loc.length >= 2) {
+                maneuverLoc = LatLng((loc[1] as num).toDouble(),
+                    (loc[0] as num).toDouble());
+              } else {
+                maneuverLoc = stops.first;
+              }
+
+              routeManeuvers.add(Maneuver(
+                instruction: instruction,
+                direction: _parseDirection(instruction),
+                distanceKm: distance / 1000,
+                streetName: name,
+                location: maneuverLoc,
+              ));
             }
           }
         }
@@ -171,6 +235,7 @@ class RoutingService {
         distanceKm: distanceM / 1000,
         durationMin: durationS / 60,
         instructions: instructions,
+        maneuvers: routeManeuvers,
         routingEngine: 'osrm',
       );
     } catch (e) {

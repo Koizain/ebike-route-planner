@@ -129,6 +129,11 @@ class RouteInfoPanel extends StatelessWidget {
                   ],
                 ),
               ),
+              // Difficulty badge
+              if (state.routeDifficulty.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _difficultyBadge(state),
+              ],
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -244,9 +249,54 @@ class RouteInfoPanel extends StatelessWidget {
                 fontSize: 15,
                 color: color ?? Colors.white)),
         Text(label,
-            style:
-                TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5))),
+            style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.5))),
       ],
+    );
+  }
+
+  Widget _difficultyBadge(AppState state) {
+    final difficulty = state.routeDifficulty;
+    Color color;
+    String label;
+    switch (difficulty) {
+      case 'easy':
+        color = kAccentGreen;
+        label = 'Easy';
+      case 'moderate':
+        color = Colors.amber;
+        label = 'Moderate';
+      case 'challenging':
+        color = Colors.orange;
+        label = 'Challenging';
+      case 'hard':
+        color = Colors.redAccent;
+        label = 'Hard';
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.terrain, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              )),
+        ],
+      ),
     );
   }
 }

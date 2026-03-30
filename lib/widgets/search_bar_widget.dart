@@ -156,6 +156,28 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
     }
   }
 
+  void _searchNearMe() async {
+    final state = context.read<AppState>();
+    var loc = state.currentLocation;
+    if (loc == null) {
+      await state.fetchCurrentLocation();
+      loc = state.currentLocation;
+    }
+    if (loc == null) return;
+
+    final query = _toController.text.isEmpty
+        ? 'cafe restaurant park'
+        : _toController.text;
+    final results =
+        await _geocoding.searchAddress(query, nearLocation: loc);
+    if (mounted) {
+      setState(() {
+        _toResults = results;
+        _showToResults = results.isNotEmpty;
+      });
+    }
+  }
+
   void _swapStartEnd() {
     final state = context.read<AppState>();
     final tmpText = _fromController.text;
@@ -214,7 +236,8 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: kAccentGreen.withValues(alpha: 0.5),
+                                color: kAccentGreen
+                                    .withValues(alpha: 0.5),
                                 blurRadius: 6,
                               ),
                             ],
@@ -240,33 +263,40 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                             decoration: InputDecoration(
                               hintText: 'Start location',
                               hintStyle: TextStyle(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.35),
+                                  color: Colors.white
+                                      .withValues(alpha: 0.35),
                                   fontSize: 14),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
                               filled: false,
                               contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 12),
+                                  const EdgeInsets.symmetric(
+                                      vertical: 12),
                               suffixIcon: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (_fromController.text.isNotEmpty)
+                                  if (_fromController
+                                      .text.isNotEmpty)
                                     GestureDetector(
                                       onTap: () {
                                         _fromController.clear();
-                                        setState(
-                                            () => _showFromResults = false);
+                                        setState(() =>
+                                            _showFromResults =
+                                                false);
                                       },
-                                      child: const Icon(Icons.close,
-                                          size: 18, color: Colors.white38),
+                                      child: const Icon(
+                                          Icons.close,
+                                          size: 18,
+                                          color: Colors.white38),
                                     ),
                                   const SizedBox(width: 4),
                                   GestureDetector(
                                     onTap: _useMyLocation,
-                                    child: Icon(Icons.my_location,
-                                        size: 18, color: kAccentBlue),
+                                    child: Icon(
+                                        Icons.my_location,
+                                        size: 18,
+                                        color: kAccentBlue),
                                   ),
                                   const SizedBox(width: 10),
                                 ],
@@ -283,7 +313,8 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                         Expanded(
                           child: Container(
                             height: 1,
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white
+                                .withValues(alpha: 0.08),
                           ),
                         ),
                         GestureDetector(
@@ -291,7 +322,8 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             child: const Icon(Icons.swap_vert,
-                                size: 20, color: Colors.white54),
+                                size: 20,
+                                color: Colors.white54),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -309,7 +341,8 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: kAccentBlue.withValues(alpha: 0.5),
+                                color: kAccentBlue
+                                    .withValues(alpha: 0.5),
                                 blurRadius: 6,
                               ),
                             ],
@@ -331,30 +364,48 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                               }
                             },
                             style: const TextStyle(
-                                fontSize: 14, color: Colors.white),
+                                fontSize: 14,
+                                color: Colors.white),
                             decoration: InputDecoration(
                               hintText: 'Destination',
                               hintStyle: TextStyle(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.35),
+                                  color: Colors.white
+                                      .withValues(alpha: 0.35),
                                   fontSize: 14),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
                               filled: false,
                               contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 12),
-                              suffixIcon: _toController.text.isNotEmpty
-                                  ? GestureDetector(
+                                  const EdgeInsets.symmetric(
+                                      vertical: 12),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_toController
+                                      .text.isNotEmpty)
+                                    GestureDetector(
                                       onTap: () {
                                         _toController.clear();
-                                        setState(
-                                            () => _showToResults = false);
+                                        setState(() =>
+                                            _showToResults =
+                                                false);
                                       },
-                                      child: const Icon(Icons.close,
-                                          size: 18, color: Colors.white38),
-                                    )
-                                  : null,
+                                      child: const Icon(
+                                          Icons.close,
+                                          size: 18,
+                                          color: Colors.white38),
+                                    ),
+                                  const SizedBox(width: 4),
+                                  GestureDetector(
+                                    onTap: _searchNearMe,
+                                    child: Icon(Icons.near_me,
+                                        size: 18,
+                                        color: kAccentBlue),
+                                  ),
+                                  const SizedBox(width: 10),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -363,7 +414,8 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                     const SizedBox(height: 2),
                     // Route type selector
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                      padding:
+                          const EdgeInsets.fromLTRB(8, 0, 8, 8),
                       child: Row(
                         children: [
                           _routeTypeButton(
@@ -395,12 +447,24 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
             ),
           ),
         ),
-        // From results dropdown
-        if (_showFromResults && _fromResults.isNotEmpty)
-          _buildResultsList(_fromResults, _selectFromResult),
-        // To results dropdown
-        if (_showToResults && _toResults.isNotEmpty)
-          _buildResultsList(_toResults, _selectToResult),
+        // From results dropdown with animation
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: _showFromResults && _fromResults.isNotEmpty
+              ? _buildResultsList(_fromResults, _selectFromResult,
+                  isRecent: _fromController.text.isEmpty)
+              : const SizedBox(width: double.infinity, height: 0),
+        ),
+        // To results dropdown with animation
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: _showToResults && _toResults.isNotEmpty
+              ? _buildResultsList(_toResults, _selectToResult,
+                  isRecent: _toController.text.isEmpty)
+              : const SizedBox(width: double.infinity, height: 0),
+        ),
       ],
     );
   }
@@ -434,15 +498,18 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
             children: [
               Icon(icon,
                   size: 16,
-                  color: selected ? kAccentGreen : Colors.white54),
+                  color:
+                      selected ? kAccentGreen : Colors.white54),
               const SizedBox(width: 4),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.normal,
-                  color: selected ? kAccentGreen : Colors.white54,
+                  fontWeight: selected
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                  color:
+                      selected ? kAccentGreen : Colors.white54,
                 ),
               ),
             ],
@@ -453,14 +520,16 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
   }
 
   Widget _buildResultsList(
-      List<SearchResult> results, void Function(SearchResult) onSelect) {
+      List<SearchResult> results, void Function(SearchResult) onSelect,
+      {bool isRecent = false}) {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 2, 12, 0),
       constraints: const BoxConstraints(maxHeight: 200),
       decoration: BoxDecoration(
         color: kNavyMid.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
               blurRadius: 12,
@@ -471,23 +540,33 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
         shrinkWrap: true,
         padding: const EdgeInsets.symmetric(vertical: 4),
         itemCount: results.length,
-        separatorBuilder: (_, __) =>
-            Divider(height: 1, indent: 40, color: Colors.white.withValues(alpha: 0.06)),
+        separatorBuilder: (_, __) => Divider(
+            height: 1,
+            indent: 40,
+            color: Colors.white.withValues(alpha: 0.06)),
         itemBuilder: (context, index) {
           final result = results[index];
           return ListTile(
             dense: true,
-            leading: Icon(Icons.place, size: 18, color: kAccentGreen.withValues(alpha: 0.6)),
+            leading: Icon(
+              isRecent ? Icons.history : Icons.place,
+              size: 18,
+              color: isRecent
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : kAccentGreen.withValues(alpha: 0.6),
+            ),
             title: Text(
               _shortName(result.name),
-              style: const TextStyle(fontSize: 13, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 13, color: Colors.white),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
               result.name,
-              style:
-                  TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35)),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.35)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

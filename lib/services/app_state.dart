@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/route_point.dart';
@@ -47,6 +48,17 @@ class AppState extends ChangeNotifier {
   DateTime? trackingStartTime;
   double currentSpeedKmh = 0;
 
+  // Navigation
+  bool isNavigating = false;
+  int currentManeuverIndex = 0;
+
+  // Heatmap overlay
+  bool showHeatmap = false;
+
+  // Heading-up mode
+  bool headingUp = false;
+  double userHeading = 0;
+
   // Saved routes
   List<SavedRoute> savedRoutes = [];
 
@@ -54,6 +66,37 @@ class AppState extends ChangeNotifier {
     capacityWh: 500,
     consumptionWhPerKm: 15,
   );
+
+  // Route difficulty based on elevation gain per km
+  String get routeDifficulty {
+    if (currentRoute == null) return '';
+    final route = currentRoute!;
+    if (route.distanceKm <= 0) return 'easy';
+    final gainPerKm = route.elevationGainM / route.distanceKm;
+    if (gainPerKm < 5) return 'easy';
+    if (gainPerKm < 15) return 'moderate';
+    if (gainPerKm < 30) return 'challenging';
+    return 'hard';
+  }
+
+  // Current navigation maneuver
+  Maneuver? get currentManeuver {
+    if (!isNavigating || currentRoute == null) return null;
+    final maneuvers = currentRoute!.maneuvers;
+    if (currentManeuverIndex >= maneuvers.length) return null;
+    return maneuvers[currentManeuverIndex];
+  }
+
+  // Distance to next maneuver in meters
+  double get distanceToNextManeuverM {
+    if (!isNavigating || currentRoute == null || currentLocation == null) {
+      return 0;
+    }
+    final maneuvers = currentRoute!.maneuvers;
+    if (currentManeuverIndex >= maneuvers.length) return 0;
+    return _haversineM(
+        currentLocation!, maneuvers[currentManeuverIndex].location);
+  }
 
   Future<void> fetchCurrentLocation() async {
     final loc = await _locationService.getCurrentLocation();
@@ -107,8 +150,8 @@ class AppState extends ChangeNotifier {
 
   void updateWaypointPosition(int index, LatLng pos) {
     if (index >= 0 && index < waypoints.length) {
-      waypoints[index] = RoutePoint(
-          position: pos, label: waypoints[index].label);
+      waypoints[index] =
+          RoutePoint(position: pos, label: waypoints[index].label);
       notifyListeners();
       _maybeCalculateRoute();
     }
@@ -129,8 +172,8 @@ class AppState extends ChangeNotifier {
   void _relabelWaypoints() {
     for (int i = 0; i < waypoints.length; i++) {
       final label = String.fromCharCode(67 + i);
-      waypoints[i] = RoutePoint(
-          position: waypoints[i].position, label: label);
+      waypoints[i] =
+          RoutePoint(position: waypoints[i].position, label: label);
     }
   }
 
@@ -141,6 +184,7 @@ class AppState extends ChangeNotifier {
     routeError = null;
     elevationProfile = null;
     waypoints.clear();
+    stopNavigation();
     notifyListeners();
   }
 
@@ -161,7 +205,62 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void fetchPOIsForBounds(double south, double west, double north, double east) {
+  void toggleHeatmap() {
+    showHeatmap = !showHeatmap;
+    notifyListeners();
+  }
+
+  void toggleHeadingUp() {
+    headingUp = !headingUp;
+    notifyListeners();
+  }
+
+  // Navigation
+  void startNavigation() {
+    if (currentRoute == null || currentRoute!.maneuvers.isEmpty) return;
+    isNavigating = true;
+    currentManeuverIndex = 0;
+    if (!isTracking) {
+      _startTracking();
+    }
+    notifyListeners();
+  }
+
+  void stopNavigation() {
+    if (!isNavigating) return;
+    isNavigating = false;
+    currentManeuverIndex = 0;
+    notifyListeners();
+  }
+
+  void _updateNavigationProgress(LatLng pos) {
+    if (!isNavigating || currentRoute == null) return;
+    final maneuvers = currentRoute!.maneuvers;
+    if (maneuvers.isEmpty || currentManeuverIndex >= maneuvers.length) return;
+
+    final distToNext =
+        _haversineM(pos, maneuvers[currentManeuverIndex].location);
+    if (distToNext < 30) {
+      if (currentManeuverIndex + 1 < maneuvers.length) {
+        currentManeuverIndex++;
+      } else {
+        stopNavigation();
+      }
+    }
+  }
+
+  void _updateHeading(LatLng from, LatLng to) {
+    final dLon = _toRad(to.longitude - from.longitude);
+    final lat1 = _toRad(from.latitude);
+    final lat2 = _toRad(to.latitude);
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    userHeading = (math.atan2(y, x) * 180 / math.pi + 360) % 360;
+  }
+
+  void fetchPOIsForBounds(
+      double south, double west, double north, double east) {
     if (!showPois) return;
     _poiDebounce?.cancel();
     _poiDebounce = Timer(const Duration(seconds: 1), () async {
@@ -207,6 +306,12 @@ class AppState extends ChangeNotifier {
           currentSpeedKmh =
               (trackingDistanceM / 1000) / (elapsed.inSeconds / 3600);
         }
+        // Update heading when moved significantly
+        if (dist > 5) {
+          _updateHeading(_lastTrackingPoint!, pos);
+        }
+        // Update navigation progress
+        _updateNavigationProgress(pos);
       }
       _lastTrackingPoint = pos;
       notifyListeners();
@@ -218,6 +323,9 @@ class AppState extends ChangeNotifier {
     isTracking = false;
     _trackingSubscription?.cancel();
     _trackingSubscription = null;
+    if (isNavigating) {
+      stopNavigation();
+    }
     notifyListeners();
   }
 
@@ -228,7 +336,9 @@ class AppState extends ChangeNotifier {
     final sinLat = _sin(dLat / 2);
     final sinLon = _sin(dLon / 2);
     final h = sinLat * sinLat +
-        _cos(_toRad(a.latitude)) * _cos(_toRad(b.latitude)) * sinLon * sinLon;
+        _cos(_toRad(a.latitude)) * _cos(_toRad(b.latitude)) *
+            sinLon *
+            sinLon;
     return 2 * R * _asin(_sqrt(h));
   }
 
@@ -317,8 +427,8 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     final stops = _allStops();
-    final result = await _routingService.getMultiStopRoute(stops,
-        routeType: routeType);
+    final result =
+        await _routingService.getMultiStopRoute(stops, routeType: routeType);
 
     if (result != null) {
       currentRoute = result;
