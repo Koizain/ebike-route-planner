@@ -56,7 +56,7 @@ class GeocodingService {
     try {
       final response = await http
           .get(url, headers: _headers)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) return [];
 
       final data = json.decode(response.body) as List;
@@ -82,7 +82,7 @@ class GeocodingService {
     try {
       final response = await http
           .get(url, headers: _headers)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) return null;
 
       final data = json.decode(response.body) as Map<String, dynamic>;

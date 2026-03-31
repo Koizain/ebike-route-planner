@@ -34,7 +34,7 @@ out body;
             Uri.parse(_overpassUrl),
             body: {'data': query},
           )
-          .timeout(const Duration(seconds: 12));
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode != 200) return [];
 

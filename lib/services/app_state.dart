@@ -99,10 +99,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> fetchCurrentLocation() async {
-    final loc = await _locationService.getCurrentLocation();
-    if (loc != null) {
-      currentLocation = loc;
-      notifyListeners();
+    try {
+      final loc = await _locationService.getCurrentLocation();
+      if (loc != null) {
+        currentLocation = loc;
+        notifyListeners();
+      }
+    } catch (_) {
+      // Location fetch failed, ignore
     }
   }
 
@@ -264,14 +268,18 @@ class AppState extends ChangeNotifier {
     if (!showPois) return;
     _poiDebounce?.cancel();
     _poiDebounce = Timer(const Duration(seconds: 1), () async {
-      final pois = await _poiService.fetchBikePOIs(
-        south: south,
-        west: west,
-        north: north,
-        east: east,
-      );
-      poiMarkers = pois;
-      notifyListeners();
+      try {
+        final pois = await _poiService.fetchBikePOIs(
+          south: south,
+          west: west,
+          north: north,
+          east: east,
+        );
+        poiMarkers = pois;
+        notifyListeners();
+      } catch (_) {
+        // POI fetch is non-critical, silently ignore
+      }
     });
   }
 
@@ -333,37 +341,16 @@ class AppState extends ChangeNotifier {
     const R = 6371000.0;
     final dLat = _toRad(b.latitude - a.latitude);
     final dLon = _toRad(b.longitude - a.longitude);
-    final sinLat = _sin(dLat / 2);
-    final sinLon = _sin(dLon / 2);
+    final sinLat = math.sin(dLat / 2);
+    final sinLon = math.sin(dLon / 2);
     final h = sinLat * sinLat +
-        _cos(_toRad(a.latitude)) * _cos(_toRad(b.latitude)) *
+        math.cos(_toRad(a.latitude)) * math.cos(_toRad(b.latitude)) *
             sinLon *
             sinLon;
-    return 2 * R * _asin(_sqrt(h));
+    return 2 * R * math.asin(math.sqrt(h));
   }
 
-  static double _toRad(double deg) => deg * 3.141592653589793 / 180;
-  static double _sin(double x) => _taylorSin(x);
-  static double _cos(double x) => _taylorSin(x + 3.141592653589793 / 2);
-  static double _asin(double x) =>
-      x + (x * x * x) / 6 + 3 * (x * x * x * x * x) / 40;
-  static double _sqrt(double x) {
-    if (x <= 0) return 0;
-    double g = x;
-    for (int i = 0; i < 20; i++) {
-      g = (g + x / g) / 2;
-    }
-    return g;
-  }
-
-  static double _taylorSin(double x) {
-    const pi = 3.141592653589793;
-    x = x % (2 * pi);
-    if (x > pi) x -= 2 * pi;
-    if (x < -pi) x += 2 * pi;
-    final x2 = x * x;
-    return x * (1 - x2 / 6 * (1 - x2 / 20 * (1 - x2 / 42)));
-  }
+  static double _toRad(double deg) => deg * math.pi / 180;
 
   // Saved routes
   Future<void> loadSavedRoutes() async {
@@ -426,19 +413,25 @@ class AppState extends ChangeNotifier {
     elevationProfile = null;
     notifyListeners();
 
-    final stops = _allStops();
-    final result =
-        await _routingService.getMultiStopRoute(stops, routeType: routeType);
+    try {
+      final stops = _allStops();
+      final result =
+          await _routingService.getMultiStopRoute(stops, routeType: routeType);
 
-    if (result != null) {
-      currentRoute = result;
-      isLoadingRoute = false;
-      notifyListeners();
+      if (result != null) {
+        currentRoute = result;
+        isLoadingRoute = false;
+        notifyListeners();
 
-      // Fire-and-forget: fetch elevation in background
-      unawaited(_fetchElevationForRoute(result));
-    } else {
-      routeError = 'Could not calculate route. Check connection.';
+        // Fire-and-forget: fetch elevation in background
+        unawaited(_fetchElevationForRoute(result));
+      } else {
+        routeError = 'Could not calculate route. Check connection.';
+        isLoadingRoute = false;
+        notifyListeners();
+      }
+    } catch (_) {
+      routeError = 'Route calculation failed. Try again.';
       isLoadingRoute = false;
       notifyListeners();
     }

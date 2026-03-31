@@ -61,14 +61,19 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
   }
 
   Future<void> _loadRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList('recent_searches') ?? [];
-    setState(() {
-      _recentSearches = raw
-          .map((s) =>
-              SearchResult.fromJson(json.decode(s) as Map<String, dynamic>))
-          .toList();
-    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList('recent_searches') ?? [];
+      if (!mounted) return;
+      setState(() {
+        _recentSearches = raw
+            .map((s) =>
+                SearchResult.fromJson(json.decode(s) as Map<String, dynamic>))
+            .toList();
+      });
+    } catch (_) {
+      // Recent searches load is non-critical
+    }
   }
 
   Future<void> _addRecentSearch(SearchResult result) async {
@@ -148,6 +153,7 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
       state.setStartPoint(state.currentLocation!);
     } else {
       state.fetchCurrentLocation().then((_) {
+        if (!mounted) return;
         if (state.currentLocation != null) {
           _fromController.text = 'My Location';
           state.setStartPoint(state.currentLocation!);
@@ -156,25 +162,29 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
     }
   }
 
-  void _searchNearMe() async {
-    final state = context.read<AppState>();
-    var loc = state.currentLocation;
-    if (loc == null) {
-      await state.fetchCurrentLocation();
-      loc = state.currentLocation;
-    }
-    if (loc == null) return;
+  Future<void> _searchNearMe() async {
+    try {
+      final state = context.read<AppState>();
+      var loc = state.currentLocation;
+      if (loc == null) {
+        await state.fetchCurrentLocation();
+        loc = state.currentLocation;
+      }
+      if (loc == null || !mounted) return;
 
-    final query = _toController.text.isEmpty
-        ? 'cafe restaurant park'
-        : _toController.text;
-    final results =
-        await _geocoding.searchAddress(query, nearLocation: loc);
-    if (mounted) {
-      setState(() {
-        _toResults = results;
-        _showToResults = results.isNotEmpty;
-      });
+      final query = _toController.text.isEmpty
+          ? 'cafe restaurant park'
+          : _toController.text;
+      final results =
+          await _geocoding.searchAddress(query, nearLocation: loc);
+      if (mounted) {
+        setState(() {
+          _toResults = results;
+          _showToResults = results.isNotEmpty;
+        });
+      }
+    } catch (_) {
+      // Search failed, ignore
     }
   }
 
