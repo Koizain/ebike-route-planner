@@ -17,7 +17,8 @@ import '../widgets/search_bar_widget.dart';
 import 'favorites_screen.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  final bool showOverlays;
+  const MapScreen({super.key, this.showOverlays = true});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -167,7 +168,7 @@ class _MapScreenState extends State<MapScreen>
       backgroundColor: Colors.transparent,
       builder: (_) => ChangeNotifierProvider.value(
         value: state,
-        child: const _RouteOptionsSheet(),
+        child: const RouteOptionsSheet(),
       ),
     );
   }
@@ -449,19 +450,21 @@ class _MapScreenState extends State<MapScreen>
                     userAgentPackageName: 'com.ebikerouteplanner.app',
                   ),
                 ),
-              if (state.currentLocation != null)
-                CircleLayer(
-                  circles: [
-                    CircleMarker(
-                      point: state.currentLocation!,
-                      radius: state.batteryConfig.rangeKm * 1000,
-                      useRadiusInMeter: true,
-                      color: kIOSBlue.withValues(alpha: 0.06),
-                      borderColor: kIOSBlue.withValues(alpha: 0.2),
-                      borderStrokeWidth: 1.5,
-                    ),
-                  ],
-                ),
+              CircleLayer(
+                circles: [
+                  CircleMarker(
+                    point: state.currentLocation ?? _defaultCenter,
+                    radius: (state.batteryConfig.rangeKm > 0
+                            ? state.batteryConfig.rangeKm
+                            : 20) *
+                        1000,
+                    useRadiusInMeter: true,
+                    color: kIOSBlue.withValues(alpha: 0.08),
+                    borderColor: kIOSBlue.withValues(alpha: 0.3),
+                    borderStrokeWidth: 2,
+                  ),
+                ],
+              ),
               // Simple 4px blue route line (Apple Maps style)
               if (animatedRoutePoints != null &&
                   animatedRoutePoints.length >= 2)
@@ -477,39 +480,43 @@ class _MapScreenState extends State<MapScreen>
               MarkerLayer(markers: markers),
             ],
           ),
-          // Search bar at top
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 4,
-            left: 0,
-            right: 0,
-            child: const RouteSearchBar(),
-          ),
-          // Navigation banner (when navigating)
-          if (state.isNavigating)
+          // Search bar at top (mobile only)
+          if (widget.showOverlays)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 4,
+              left: 0,
+              right: 0,
+              child: const RouteSearchBar(),
+            ),
+          // Navigation banner (when navigating, mobile only)
+          if (widget.showOverlays && state.isNavigating)
             Positioned(
               top: MediaQuery.of(context).padding.top + 180,
               left: 0,
               right: 0,
               child: const NavigationBanner(),
             ),
-          // Bottom area: stats bar + route info
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (state.isTracking) const LiveStatsBar(),
-                RouteInfoPanel(
-                    onRouteOptionsTap: _showRouteBottomSheet),
-              ],
+          // Bottom area: stats bar + route info (mobile only)
+          if (widget.showOverlays)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (state.isTracking) const LiveStatsBar(),
+                  RouteInfoPanel(
+                      onRouteOptionsTap: _showRouteBottomSheet),
+                ],
+              ),
             ),
-          ),
           // Map controls
           Positioned(
             right: 12,
-            bottom: state.isTracking ? 160 : 90,
+            bottom: widget.showOverlays
+                ? (state.isTracking ? 160 : 90)
+                : 20,
             child: const MapControls(),
           ),
         ],
@@ -537,8 +544,8 @@ class _TrianglePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _RouteOptionsSheet extends StatelessWidget {
-  const _RouteOptionsSheet();
+class RouteOptionsSheet extends StatelessWidget {
+  const RouteOptionsSheet({super.key});
 
   @override
   Widget build(BuildContext context) {

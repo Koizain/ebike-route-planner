@@ -92,8 +92,12 @@ class _SavedRoutesScreenState extends State<SavedRoutesScreen> {
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           state.loadRoute(route);
-          final nav = DefaultTabController.of(context);
-          nav.animateTo(0);
+          try {
+            final nav = DefaultTabController.of(context);
+            nav.animateTo(0);
+          } catch (_) {
+            Navigator.of(context).pop();
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
