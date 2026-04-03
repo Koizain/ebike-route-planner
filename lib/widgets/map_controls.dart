@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
 import '../services/app_state.dart';
 
 class MapControls extends StatelessWidget {
@@ -46,12 +47,18 @@ class MapControls extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF007AFF) : Colors.white,
+        color: active ? kNightAccent : kNightCard,
         shape: BoxShape.circle,
+        border: Border.all(
+          color: active ? kNightAccent : kNightBorder,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 8,
+            color: active
+                ? kNightAccent.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.3),
+            blurRadius: active ? 12 : 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -65,7 +72,7 @@ class MapControls extends StatelessWidget {
           child: Icon(
             icon,
             size: 20,
-            color: active ? Colors.white : const Color(0xFF1C1C1E),
+            color: active ? kNightBg : kNightText,
           ),
         ),
       ),

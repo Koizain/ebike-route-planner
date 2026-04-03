@@ -32,12 +32,13 @@ class LiveStatsBar extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: kIOSSurface,
-        borderRadius: BorderRadius.circular(12),
+        color: kNightCard,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kNightBorder),
         boxShadow: [
           BoxShadow(
-              blurRadius: 8,
-              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 12,
+              color: kNightAccent.withValues(alpha: 0.08),
               offset: const Offset(0, 2)),
         ],
       ),
@@ -50,21 +51,21 @@ class LiveStatsBar extends StatelessWidget {
             children: [
               Text(
                 state.currentSpeedKmh.toStringAsFixed(1),
-                style: GoogleFonts.inter(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  color: kIOSPrimaryText,
+                  color: kNightAccent,
                 ),
               ),
               Text('km/h',
-                  style: GoogleFonts.inter(
-                      fontSize: 10, color: kIOSSecondaryText)),
+                  style: GoogleFonts.spaceGrotesk(
+                      fontSize: 10, color: kNightTextDim)),
             ],
           ),
           _miniStat('Avg', avgSpeed.toStringAsFixed(1), 'km/h'),
           _miniStat('Dist', distKm.toStringAsFixed(2), 'km'),
           _miniStat('Cal', '$calories', 'kcal'),
-          // Heart rate zone indicator
+          // Activity level indicator
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -72,18 +73,18 @@ class LiveStatsBar extends StatelessWidget {
                 Icons.favorite,
                 size: 18,
                 color: state.currentSpeedKmh > 10
-                    ? kIOSRed
-                    : kIOSSecondaryText,
+                    ? kNightRed
+                    : kNightTextDim,
               ),
               const SizedBox(height: 2),
               Text(
                 activityLevel,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: state.currentSpeedKmh > 10
-                      ? kIOSRed
-                      : kIOSSecondaryText,
+                      ? kNightRed
+                      : kNightTextDim,
                 ),
               ),
             ],
@@ -99,16 +100,16 @@ class LiveStatsBar extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: kIOSPrimaryText,
+            color: kNightText,
           ),
         ),
         Text(
           '$label ($unit)',
-          style: GoogleFonts.inter(
-              fontSize: 9, color: kIOSSecondaryText),
+          style: GoogleFonts.spaceGrotesk(
+              fontSize: 9, color: kNightTextDim),
         ),
       ],
     );

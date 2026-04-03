@@ -11,16 +11,17 @@ import 'widgets/navigation_banner.dart';
 import 'widgets/route_info_panel.dart';
 import 'widgets/search_bar_widget.dart';
 
-// iOS System Colors
-const kIOSBlue = Color(0xFF007AFF);
-const kIOSGreen = Color(0xFF34C759);
-const kIOSRed = Color(0xFFFF3B30);
-const kIOSOrange = Color(0xFFFF9500);
-const kIOSBackground = Color(0xFFF2F2F7);
-const kIOSSurface = Color(0xFFFFFFFF);
-const kIOSPrimaryText = Color(0xFF000000);
-const kIOSSecondaryText = Color(0xFF8E8E93);
-const kIOSSeparator = Color(0xFFC6C6C8);
+// ── NIGHTRIDE Dark Cockpit Palette ────────────────────────────────────
+const kNightBg = Color(0xFF0A0E14);
+const kNightSurface = Color(0xFF131820);
+const kNightCard = Color(0xFF1A2030);
+const kNightAccent = Color(0xFF00FF87); // High-vis electric green
+const kNightCyan = Color(0xFF00B4D8); // Route/info cyan
+const kNightRed = Color(0xFFFF3366); // Hot coral
+const kNightAmber = Color(0xFFFFB800); // Warning amber
+const kNightText = Color(0xFFE8ECF1); // Primary text
+const kNightTextDim = Color(0xFF6B7280); // Secondary text
+const kNightBorder = Color(0xFF252D3A); // Borders/separators
 
 void main() {
   runApp(
@@ -36,65 +37,67 @@ class EBikeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = GoogleFonts.interTextTheme(
-      ThemeData.light().textTheme,
+    final textTheme = GoogleFonts.spaceGroteskTextTheme(
+      ThemeData.dark().textTheme,
     );
 
     return MaterialApp(
       title: 'eBike Route Planner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.light(
-          primary: kIOSBlue,
-          secondary: kIOSGreen,
-          surface: kIOSSurface,
-          onPrimary: Colors.white,
-          onSecondary: Colors.white,
-          onSurface: kIOSPrimaryText,
+        colorScheme: ColorScheme.dark(
+          primary: kNightAccent,
+          secondary: kNightCyan,
+          surface: kNightSurface,
+          onPrimary: kNightBg,
+          onSecondary: kNightBg,
+          onSurface: kNightText,
+          error: kNightRed,
         ),
-        scaffoldBackgroundColor: kIOSBackground,
+        scaffoldBackgroundColor: kNightBg,
         useMaterial3: true,
-        brightness: Brightness.light,
+        brightness: Brightness.dark,
         textTheme: textTheme,
         appBarTheme: AppBarTheme(
-          backgroundColor: kIOSSurface,
-          foregroundColor: kIOSPrimaryText,
+          backgroundColor: kNightSurface,
+          foregroundColor: kNightText,
           elevation: 0,
           centerTitle: true,
           surfaceTintColor: Colors.transparent,
-          titleTextStyle: GoogleFonts.inter(
+          titleTextStyle: GoogleFonts.spaceGrotesk(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: kIOSPrimaryText,
+            color: kNightText,
           ),
         ),
         cardTheme: CardThemeData(
-          color: kIOSSurface,
+          color: kNightCard,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: kNightBorder, width: 1),
           ),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: kIOSSurface,
+          backgroundColor: kNightSurface,
           surfaceTintColor: Colors.transparent,
           indicatorColor: Colors.transparent,
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: kIOSBlue, size: 24);
+              return const IconThemeData(color: kNightAccent, size: 24);
             }
-            return const IconThemeData(color: kIOSSecondaryText, size: 24);
+            return const IconThemeData(color: kNightTextDim, size: 24);
           }),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return GoogleFonts.inter(
-                color: kIOSBlue,
+              return GoogleFonts.spaceGrotesk(
+                color: kNightAccent,
                 fontSize: 10,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               );
             }
-            return GoogleFonts.inter(
-              color: kIOSSecondaryText,
+            return GoogleFonts.spaceGrotesk(
+              color: kNightTextDim,
               fontSize: 10,
               fontWeight: FontWeight.w500,
             );
@@ -102,56 +105,64 @@ class EBikeApp extends StatelessWidget {
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            backgroundColor: kIOSBlue,
-            foregroundColor: Colors.white,
+            backgroundColor: kNightAccent,
+            foregroundColor: kNightBg,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            textStyle: GoogleFonts.spaceGrotesk(
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: kIOSBlue,
-            side: const BorderSide(color: kIOSSeparator),
+            foregroundColor: kNightAccent,
+            side: const BorderSide(color: kNightBorder),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            textStyle: GoogleFonts.spaceGrotesk(
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: kIOSBackground,
+          fillColor: kNightCard,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kIOSSeparator),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: kNightBorder),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kIOSSeparator),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: kNightBorder),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kIOSBlue),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: kNightAccent, width: 1.5),
           ),
-          labelStyle: GoogleFonts.inter(color: kIOSSecondaryText),
-          hintStyle: GoogleFonts.inter(color: kIOSSecondaryText),
+          labelStyle: GoogleFonts.spaceGrotesk(color: kNightTextDim),
+          hintStyle: GoogleFonts.spaceGrotesk(color: kNightTextDim),
         ),
         dialogTheme: DialogThemeData(
-          backgroundColor: kIOSSurface,
+          backgroundColor: kNightSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: kNightBorder),
           ),
-          titleTextStyle: GoogleFonts.inter(
+          titleTextStyle: GoogleFonts.spaceGrotesk(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: kIOSPrimaryText,
+            color: kNightText,
           ),
         ),
         snackBarTheme: SnackBarThemeData(
-          backgroundColor: const Color(0xFF1C1C1E),
-          contentTextStyle: GoogleFonts.inter(color: Colors.white),
+          backgroundColor: kNightCard,
+          contentTextStyle: GoogleFonts.spaceGrotesk(color: kNightText),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: kNightBorder),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -199,8 +210,8 @@ class _MobileLayout extends StatelessWidget {
           decoration: const BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: kIOSSeparator,
-                width: 0.5,
+                color: kNightBorder,
+                width: 1,
               ),
             ),
           ),
@@ -260,11 +271,11 @@ class _DesktopLayout extends StatelessWidget {
           SizedBox(
             width: 380,
             child: Material(
-              color: kIOSSurface,
+              color: kNightSurface,
               child: _DesktopSidebar(),
             ),
           ),
-          Container(width: 1, color: kIOSSeparator),
+          Container(width: 1, color: kNightBorder),
           const Expanded(
             child: MapScreen(showOverlays: false),
           ),
@@ -286,20 +297,28 @@ class _DesktopSidebar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
           child: Row(
             children: [
-              const Icon(Icons.electric_bike, color: kIOSBlue, size: 28),
-              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: kNightAccent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.electric_bike, color: kNightAccent, size: 24),
+              ),
+              const SizedBox(width: 12),
               Text(
-                'eBike Planner',
-                style: GoogleFonts.inter(
+                'NIGHTRIDE',
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: kIOSPrimaryText,
+                  color: kNightAccent,
+                  letterSpacing: 2,
                 ),
               ),
             ],
           ),
         ),
-        const Divider(height: 1, color: kIOSSeparator),
+        const Divider(height: 1, color: kNightBorder),
         // Scrollable content
         Expanded(
           child: SingleChildScrollView(
@@ -385,13 +404,14 @@ class _DesktopSidebar extends StatelessWidget {
       context: context,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kNightBorder),
         ),
         child: SizedBox(
           width: 420,
           height: 520,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             child: ChangeNotifierProvider.value(
               value: state,
               child: const SavedRoutesScreen(),
@@ -408,13 +428,14 @@ class _DesktopSidebar extends StatelessWidget {
       context: context,
       builder: (_) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: kNightBorder),
         ),
         child: SizedBox(
           width: 420,
           height: 600,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             child: ChangeNotifierProvider.value(
               value: state,
               child: const RangeScreen(),
@@ -437,19 +458,20 @@ class _ManeuversList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Divider(height: 1, color: kIOSSeparator),
+        const Divider(height: 1, color: kNightBorder),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
           child: Row(
             children: [
-              const Icon(Icons.directions, size: 18, color: kIOSBlue),
+              const Icon(Icons.directions, size: 18, color: kNightCyan),
               const SizedBox(width: 8),
               Text(
-                'Directions',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: kIOSPrimaryText,
+                'DIRECTIONS',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: kNightCyan,
+                  letterSpacing: 1.5,
                 ),
               ),
             ],
@@ -463,25 +485,27 @@ class _ManeuversList extends StatelessWidget {
               dense: true,
               visualDensity: VisualDensity.compact,
               leading: Icon(_directionIcon(m.direction),
-                  size: 20, color: kIOSBlue),
+                  size: 20, color: kNightAccent),
               title: Text(
                 m.instruction,
-                style: GoogleFonts.inter(
-                    fontSize: 13, color: kIOSPrimaryText),
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 13, color: kNightText),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: m.streetName.isNotEmpty
                   ? Text(m.streetName,
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: kIOSSecondaryText))
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 12, color: kNightTextDim))
                   : null,
               trailing: Text(
                 m.distanceKm < 1
                     ? '${(m.distanceKm * 1000).toStringAsFixed(0)}m'
                     : '${m.distanceKm.toStringAsFixed(1)}km',
-                style: GoogleFonts.inter(
-                    fontSize: 12, color: kIOSSecondaryText),
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 12,
+                    color: kNightAccent,
+                    fontWeight: FontWeight.w600),
               ),
             ),
           );

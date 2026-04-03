@@ -27,16 +27,13 @@ class NavigationBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kIOSBlue, kIOSGreen],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: kNightCard,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kNightAccent, width: 2),
         boxShadow: [
           BoxShadow(
-              blurRadius: 12,
-              color: kIOSBlue.withValues(alpha: 0.4),
+              blurRadius: 16,
+              color: kNightAccent.withValues(alpha: 0.2),
               offset: const Offset(0, 4)),
         ],
       ),
@@ -47,13 +44,14 @@ class NavigationBanner extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: kNightAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: kNightAccent.withValues(alpha: 0.3)),
             ),
             child: Icon(
               _directionIcon(maneuver.direction),
               size: 30,
-              color: Colors.white,
+              color: kNightAccent,
             ),
           ),
           const SizedBox(width: 14),
@@ -65,19 +63,19 @@ class NavigationBanner extends StatelessWidget {
               children: [
                 Text(
                   distStr,
-                  style: GoogleFonts.inter(
-                    fontSize: 24,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: kNightAccent,
                   ),
                 ),
                 if (maneuver.streetName.isNotEmpty)
                   Text(
                     maneuver.streetName,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.spaceGrotesk(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: kNightText,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -85,9 +83,9 @@ class NavigationBanner extends StatelessWidget {
                 else
                   Text(
                     maneuver.instruction,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.spaceGrotesk(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: kNightTextDim,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -98,9 +96,9 @@ class NavigationBanner extends StatelessWidget {
           // Stop navigation button
           IconButton(
             onPressed: () => state.stopNavigation(),
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: const Icon(Icons.close, color: kNightText),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              backgroundColor: kNightBorder,
             ),
             tooltip: 'Stop Navigation',
           ),

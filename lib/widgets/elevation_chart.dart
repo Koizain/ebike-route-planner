@@ -25,21 +25,24 @@ class ElevationChart extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.terrain, size: 18, color: kIOSBlue),
+            const Icon(Icons.terrain, size: 18, color: kNightCyan),
             const SizedBox(width: 8),
             Text(
-              'Elevation Profile',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: kIOSPrimaryText,
+              'ELEVATION',
+              style: GoogleFonts.spaceGrotesk(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: kNightCyan,
+                letterSpacing: 1.5,
               ),
             ),
             const Spacer(),
             Text(
               '${profile.distances.last.toStringAsFixed(1)} km',
-              style: GoogleFonts.inter(
-                  fontSize: 12, color: kIOSSecondaryText),
+              style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12,
+                  color: kNightTextDim,
+                  fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -85,8 +88,8 @@ class ElevationChart extends StatelessWidget {
       children: labels
           .map((d) => Text(
                 '${d.toStringAsFixed(d == d.roundToDouble() ? 0 : 1)} km',
-                style: GoogleFonts.inter(
-                    fontSize: 10, color: kIOSSecondaryText),
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 10, color: kNightTextDim),
               ))
           .toList(),
     );
@@ -120,9 +123,9 @@ class _ElevationPainter extends CustomPainter {
     double toY(double elev) =>
         padding.top + chartH - ((elev - minElev) / elevRange) * chartH;
 
-    // Grid lines
+    // Grid lines — dark theme
     final gridPaint = Paint()
-      ..color = const Color(0xFFE5E5EA) // iOS light separator
+      ..color = const Color(0xFF252D3A)
       ..strokeWidth = 0.5;
 
     final gridCount = 4;
@@ -136,7 +139,7 @@ class _ElevationPainter extends CustomPainter {
         text: TextSpan(
           text: '${elev.toStringAsFixed(0)}m',
           style: const TextStyle(
-              fontSize: 9, color: Color(0xFF8E8E93)), // iOS secondary
+              fontSize: 9, color: Color(0xFF6B7280)),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -150,7 +153,7 @@ class _ElevationPainter extends CustomPainter {
       path.lineTo(toX(distances[i]), toY(elevations[i]));
     }
 
-    // Fill path
+    // Fill path — green gradient
     final fillPath = Path.from(path);
     fillPath.lineTo(toX(distances.last), padding.top + chartH);
     fillPath.lineTo(toX(distances.first), padding.top + chartH);
@@ -161,16 +164,16 @@ class _ElevationPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFF007AFF).withValues(alpha: 0.25),
-          const Color(0xFF007AFF).withValues(alpha: 0.05),
+          const Color(0xFF00FF87).withValues(alpha: 0.25),
+          const Color(0xFF00FF87).withValues(alpha: 0.02),
         ],
       ).createShader(
           Rect.fromLTWH(0, padding.top, size.width, chartH));
     canvas.drawPath(fillPath, fillPaint);
 
-    // Line
+    // Line — electric green
     final linePaint = Paint()
-      ..color = const Color(0xFF007AFF)
+      ..color = const Color(0xFF00FF87)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -196,15 +199,21 @@ class _ElevationPainter extends CustomPainter {
       final cx = toX(progress);
       final cy = toY(elev);
 
+      // Glow
+      canvas.drawCircle(
+        Offset(cx, cy),
+        8,
+        Paint()..color = const Color(0xFF00FF87).withValues(alpha: 0.3),
+      );
       canvas.drawCircle(
         Offset(cx, cy),
         5,
-        Paint()..color = Colors.white,
+        Paint()..color = const Color(0xFF0A0E14),
       );
       canvas.drawCircle(
         Offset(cx, cy),
         3.5,
-        Paint()..color = const Color(0xFF007AFF),
+        Paint()..color = const Color(0xFF00FF87),
       );
     }
   }

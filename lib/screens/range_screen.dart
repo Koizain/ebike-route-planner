@@ -90,11 +90,13 @@ class _RangeScreenState extends State<RangeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.battery_charging_full,
-                color: kIOSGreen, size: 22),
+                color: kNightAccent, size: 22),
             const SizedBox(width: 8),
-            Text('Battery Range',
-                style: GoogleFonts.inter(
-                    fontSize: 17, fontWeight: FontWeight.w600)),
+            Text('BATTERY RANGE',
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5)),
           ],
         ),
       ),
@@ -106,71 +108,93 @@ class _RangeScreenState extends State<RangeScreen> {
             // Range summary card
             Container(
               decoration: BoxDecoration(
-                color: kIOSSurface,
-                borderRadius: BorderRadius.circular(12),
+                color: kNightCard,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: kNightBorder),
                 boxShadow: [
                   BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    color: kNightAccent.withValues(alpha: 0.08),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(28),
               child: Column(
                 children: [
-                  const Icon(Icons.battery_charging_full,
-                      size: 48, color: kIOSGreen),
-                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: kNightAccent.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.battery_charging_full,
+                        size: 36, color: kNightAccent),
+                  ),
+                  const SizedBox(height: 12),
                   Text(
                     '${rangeKm.toStringAsFixed(1)} km',
-                    style: GoogleFonts.inter(
-                      fontSize: 34,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 40,
                       fontWeight: FontWeight.w700,
-                      color: kIOSGreen,
+                      color: kNightAccent,
                     ),
                   ),
-                  Text('Estimated Range',
-                      style: GoogleFonts.inter(
-                          color: kIOSSecondaryText, fontSize: 15)),
-                  const SizedBox(height: 8),
-                  Text(
-                    'A range circle is shown on the map from your current location',
-                    style: GoogleFonts.inter(
-                        color: kIOSSecondaryText, fontSize: 13),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: 4),
+                  Text('ESTIMATED RANGE',
+                      style: GoogleFonts.spaceGrotesk(
+                        color: kNightTextDim,
+                        fontSize: 12,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.w500,
+                      )),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: kNightBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Range circle shown on map from your location',
+                      style: GoogleFonts.spaceGrotesk(
+                          color: kNightTextDim, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Text('eBike Preset',
-                style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: kIOSPrimaryText)),
+            const SizedBox(height: 28),
+            Text('EBIKE PRESET',
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: kNightCyan,
+                    letterSpacing: 1.5)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _selectedPreset,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: kIOSSurface,
+                fillColor: kNightCard,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: kIOSSeparator)),
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: kNightBorder)),
                 prefixIcon:
-                    const Icon(Icons.electric_bike, color: kIOSBlue),
+                    const Icon(Icons.electric_bike, color: kNightAccent),
               ),
-              dropdownColor: kIOSSurface,
+              dropdownColor: kNightCard,
+              style: GoogleFonts.spaceGrotesk(color: kNightText, fontSize: 14),
               items: [
                 ..._presets.map((p) => DropdownMenuItem(
                       value: p.name,
                       child: Text(p.name,
-                          style: GoogleFonts.inter(fontSize: 14)),
+                          style: GoogleFonts.spaceGrotesk(fontSize: 14, color: kNightText)),
                     )),
                 DropdownMenuItem(
                   value: 'Custom',
                   child: Text('Custom',
-                      style: GoogleFonts.inter(fontSize: 14)),
+                      style: GoogleFonts.spaceGrotesk(fontSize: 14, color: kNightText)),
                 ),
               ],
               onChanged: (val) {
@@ -183,12 +207,13 @@ class _RangeScreenState extends State<RangeScreen> {
                 }
               },
             ),
-            const SizedBox(height: 16),
-            Text('Battery Settings',
-                style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: kIOSPrimaryText)),
+            const SizedBox(height: 24),
+            Text('BATTERY SETTINGS',
+                style: GoogleFonts.spaceGrotesk(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: kNightCyan,
+                    letterSpacing: 1.5)),
             const SizedBox(height: 16),
             _buildField(
               controller: _capacityCtrl,
@@ -206,8 +231,8 @@ class _RangeScreenState extends State<RangeScreen> {
             const SizedBox(height: 8),
             Text(
               'Typical eBike: 10-20 Wh/km depending on terrain, speed, and assist level',
-              style: GoogleFonts.inter(
-                  color: kIOSSecondaryText, fontSize: 13),
+              style: GoogleFonts.spaceGrotesk(
+                  color: kNightTextDim, fontSize: 12),
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
@@ -234,15 +259,16 @@ class _RangeScreenState extends State<RangeScreen> {
       controller: controller,
       keyboardType:
           const TextInputType.numberWithOptions(decimal: true),
+      style: GoogleFonts.spaceGrotesk(color: kNightText),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: kIOSBlue),
+        prefixIcon: Icon(icon, color: kNightAccent),
         filled: true,
-        fillColor: kIOSSurface,
+        fillColor: kNightCard,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kIOSSeparator)),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: kNightBorder)),
       ),
       onChanged: (_) {
         setState(() => _selectedPreset = 'Custom');

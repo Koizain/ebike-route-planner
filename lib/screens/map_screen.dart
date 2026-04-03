@@ -178,18 +178,18 @@ class _MapScreenState extends State<MapScreen>
       width: isDragging ? 36 : 28,
       height: isDragging ? 36 : 28,
       decoration: BoxDecoration(
-        color: kIOSGreen,
+        color: kNightAccent,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
+        border: Border.all(color: kNightBg, width: 3),
         boxShadow: [
           BoxShadow(
-            blurRadius: isDragging ? 8 : 4,
-            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: isDragging ? 12 : 6,
+            color: kNightAccent.withValues(alpha: 0.5),
           ),
         ],
       ),
       child: const Center(
-        child: Icon(Icons.pedal_bike, size: 14, color: Colors.white),
+        child: Icon(Icons.pedal_bike, size: 14, color: kNightBg),
       ),
     );
   }
@@ -202,20 +202,20 @@ class _MapScreenState extends State<MapScreen>
           width: isDragging ? 34 : 28,
           height: isDragging ? 34 : 28,
           decoration: BoxDecoration(
-            color: kIOSRed,
+            color: kNightRed,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
+            border: Border.all(color: kNightBg, width: 3),
             boxShadow: [
               BoxShadow(
-                blurRadius: isDragging ? 8 : 4,
-                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: isDragging ? 12 : 6,
+                color: kNightRed.withValues(alpha: 0.5),
               ),
             ],
           ),
           child: Center(
             child: Text(
               'B',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.spaceGrotesk(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
                 fontSize: isDragging ? 14 : 12,
@@ -226,7 +226,7 @@ class _MapScreenState extends State<MapScreen>
         // Teardrop pin tail
         CustomPaint(
           size: Size(10, isDragging ? 8 : 6),
-          painter: _TrianglePainter(color: kIOSRed),
+          painter: _TrianglePainter(color: kNightRed),
         ),
       ],
     );
@@ -237,21 +237,21 @@ class _MapScreenState extends State<MapScreen>
       width: isDragging ? 32 : 26,
       height: isDragging ? 32 : 26,
       decoration: BoxDecoration(
-        color: kIOSOrange,
+        color: kNightAmber,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2.5),
+        border: Border.all(color: kNightBg, width: 2.5),
         boxShadow: [
           BoxShadow(
-            blurRadius: isDragging ? 8 : 4,
-            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: isDragging ? 12 : 6,
+            color: kNightAmber.withValues(alpha: 0.4),
           ),
         ],
       ),
       child: Center(
         child: Text(
           label,
-          style: GoogleFonts.inter(
-            color: Colors.white,
+          style: GoogleFonts.spaceGrotesk(
+            color: kNightBg,
             fontWeight: FontWeight.w700,
             fontSize: isDragging ? 13 : 11,
           ),
@@ -313,7 +313,7 @@ class _MapScreenState extends State<MapScreen>
 
     final markers = <Marker>[];
 
-    // Current location blue dot - Apple Maps style
+    // Current location — glowing cyan dot
     if (state.currentLocation != null) {
       markers.add(Marker(
         point: state.currentLocation!,
@@ -321,13 +321,13 @@ class _MapScreenState extends State<MapScreen>
         height: 22,
         child: Container(
           decoration: BoxDecoration(
-            color: kIOSBlue,
+            color: kNightCyan,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
+            border: Border.all(color: kNightBg, width: 3),
             boxShadow: [
               BoxShadow(
-                blurRadius: 6,
-                color: kIOSBlue.withValues(alpha: 0.4),
+                blurRadius: 8,
+                color: kNightCyan.withValues(alpha: 0.5),
               ),
             ],
           ),
@@ -378,20 +378,21 @@ class _MapScreenState extends State<MapScreen>
           height: 16,
           child: Container(
             decoration: BoxDecoration(
-              color: poi.type == 'repair' ? kIOSOrange : kIOSGreen,
+              color: poi.type == 'repair' ? kNightAmber : kNightAccent,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
+              border: Border.all(color: kNightBg, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  blurRadius: 3,
-                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 4,
+                  color: (poi.type == 'repair' ? kNightAmber : kNightAccent)
+                      .withValues(alpha: 0.3),
                 ),
               ],
             ),
             child: Icon(
               poi.type == 'repair' ? Icons.build : Icons.local_parking,
               size: 9,
-              color: Colors.white,
+              color: kNightBg,
             ),
           ),
         ));
@@ -430,11 +431,11 @@ class _MapScreenState extends State<MapScreen>
               ),
             ),
             children: [
-              // Light map tiles - CartoDB Light (Apple Maps style)
+              // Dark map tiles — CartoDB Dark Matter
               TileLayer(
                 urlTemplate: state.showBikeTrails
                     ? 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
-                    : 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+                    : 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
                 subdomains: state.showBikeTrails
                     ? const ['a', 'b', 'c']
                     : const [],
@@ -459,20 +460,27 @@ class _MapScreenState extends State<MapScreen>
                             : 20) *
                         1000,
                     useRadiusInMeter: true,
-                    color: kIOSBlue.withValues(alpha: 0.08),
-                    borderColor: kIOSBlue.withValues(alpha: 0.3),
+                    color: kNightAccent.withValues(alpha: 0.06),
+                    borderColor: kNightAccent.withValues(alpha: 0.25),
                     borderStrokeWidth: 2,
                   ),
                 ],
               ),
-              // Simple 4px blue route line (Apple Maps style)
+              // Route line — glowing electric green
               if (animatedRoutePoints != null &&
                   animatedRoutePoints.length >= 2)
                 PolylineLayer(
                   polylines: [
+                    // Glow layer
                     Polyline(
                       points: animatedRoutePoints,
-                      color: kIOSBlue,
+                      color: kNightAccent.withValues(alpha: 0.3),
+                      strokeWidth: 10,
+                    ),
+                    // Main line
+                    Polyline(
+                      points: animatedRoutePoints,
+                      color: kNightAccent,
                       strokeWidth: 4,
                     ),
                   ],
@@ -561,9 +569,14 @@ class RouteOptionsSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
-      decoration: const BoxDecoration(
-        color: kIOSSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: kNightSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        border: const Border(
+          top: BorderSide(color: kNightAccent, width: 2),
+          left: BorderSide(color: kNightBorder, width: 1),
+          right: BorderSide(color: kNightBorder, width: 1),
+        ),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -575,7 +588,7 @@ class RouteOptionsSheet extends StatelessWidget {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: kIOSSeparator,
+                color: kNightBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -587,14 +600,15 @@ class RouteOptionsSheet extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.route,
-                          color: kIOSBlue, size: 22),
+                          color: kNightAccent, size: 22),
                       const SizedBox(width: 10),
                       Text(
-                        'Route Summary',
-                        style: GoogleFonts.inter(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: kIOSPrimaryText,
+                        'ROUTE SUMMARY',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: kNightAccent,
+                          letterSpacing: 1.5,
                         ),
                       ),
                     ],
@@ -611,10 +625,10 @@ class RouteOptionsSheet extends StatelessWidget {
                     'Battery Usage',
                     '${batteryPct.toStringAsFixed(0)}%',
                     valueColor: batteryPct > 80
-                        ? kIOSRed
+                        ? kNightRed
                         : batteryPct > 50
-                            ? kIOSOrange
-                            : kIOSGreen,
+                            ? kNightAmber
+                            : kNightAccent,
                   ),
                   if (route.elevationGainM > 0)
                     _summaryRow(Icons.trending_up, 'Elevation Gain',
@@ -635,8 +649,9 @@ class RouteOptionsSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: kIOSBackground,
-                        borderRadius: BorderRadius.circular(12),
+                        color: kNightCard,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: kNightBorder),
                       ),
                       child: ElevationChart(
                         profile: state.elevationProfile!,
@@ -650,8 +665,9 @@ class RouteOptionsSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: kIOSBackground,
-                        borderRadius: BorderRadius.circular(12),
+                        color: kNightCard,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: kNightBorder),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -661,14 +677,14 @@ class RouteOptionsSheet extends StatelessWidget {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: kIOSSecondaryText,
+                              color: kNightAccent,
                             ),
                           ),
                           const SizedBox(width: 10),
                           Text(
                             'Loading elevation...',
-                            style: GoogleFonts.inter(
-                              color: kIOSSecondaryText,
+                            style: GoogleFonts.spaceGrotesk(
+                              color: kNightTextDim,
                               fontSize: 13,
                             ),
                           ),
@@ -773,17 +789,17 @@ class RouteOptionsSheet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: kIOSSecondaryText),
+          Icon(icon, size: 20, color: kNightTextDim),
           const SizedBox(width: 12),
           Expanded(
             child: Text(label,
-                style: GoogleFonts.inter(color: kIOSSecondaryText)),
+                style: GoogleFonts.spaceGrotesk(color: kNightTextDim)),
           ),
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.spaceGrotesk(
               fontWeight: FontWeight.w600,
-              color: valueColor ?? kIOSPrimaryText,
+              color: valueColor ?? kNightText,
             ),
           ),
         ],

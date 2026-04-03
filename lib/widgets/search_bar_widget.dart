@@ -210,16 +210,17 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Apple-style white pill search bar
+        // Dark cockpit search bar
         Container(
           margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           decoration: BoxDecoration(
-            color: kIOSSurface,
-            borderRadius: BorderRadius.circular(12),
+            color: kNightCard,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: kNightBorder),
             boxShadow: [
               BoxShadow(
-                blurRadius: 8,
-                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 12,
+                color: Colors.black.withValues(alpha: 0.4),
                 offset: const Offset(0, 2),
               ),
             ],
@@ -234,9 +235,15 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: const BoxDecoration(
-                      color: kIOSGreen,
+                    decoration: BoxDecoration(
+                      color: kNightAccent,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 6,
+                          color: kNightAccent.withValues(alpha: 0.4),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -254,12 +261,12 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                           });
                         }
                       },
-                      style: GoogleFonts.inter(
-                          fontSize: 15, color: kIOSPrimaryText),
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15, color: kNightText),
                       decoration: InputDecoration(
                         hintText: 'Start location',
-                        hintStyle: GoogleFonts.inter(
-                            color: kIOSSecondaryText, fontSize: 15),
+                        hintStyle: GoogleFonts.spaceGrotesk(
+                            color: kNightTextDim, fontSize: 15),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -278,13 +285,13 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                                 },
                                 child: const Icon(Icons.close,
                                     size: 18,
-                                    color: kIOSSecondaryText),
+                                    color: kNightTextDim),
                               ),
                             const SizedBox(width: 4),
                             GestureDetector(
                               onTap: _useMyLocation,
                               child: const Icon(Icons.my_location,
-                                  size: 18, color: kIOSBlue),
+                                  size: 18, color: kNightCyan),
                             ),
                             const SizedBox(width: 12),
                           ],
@@ -300,8 +307,8 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                   const SizedBox(width: 34),
                   Expanded(
                     child: Container(
-                      height: 0.5,
-                      color: kIOSSeparator,
+                      height: 1,
+                      color: kNightBorder,
                     ),
                   ),
                   GestureDetector(
@@ -309,12 +316,18 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                     child: Container(
                       width: 32,
                       height: 32,
-                      decoration: const BoxDecoration(
-                        color: kIOSBlue,
+                      decoration: BoxDecoration(
+                        color: kNightAccent,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 8,
+                            color: kNightAccent.withValues(alpha: 0.3),
+                          ),
+                        ],
                       ),
                       child: const Icon(Icons.swap_vert,
-                          size: 18, color: Colors.white),
+                          size: 18, color: kNightBg),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -327,9 +340,15 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: const BoxDecoration(
-                      color: kIOSRed,
+                    decoration: BoxDecoration(
+                      color: kNightRed,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 6,
+                          color: kNightRed.withValues(alpha: 0.4),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -347,12 +366,12 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                           });
                         }
                       },
-                      style: GoogleFonts.inter(
-                          fontSize: 15, color: kIOSPrimaryText),
+                      style: GoogleFonts.spaceGrotesk(
+                          fontSize: 15, color: kNightText),
                       decoration: InputDecoration(
                         hintText: 'Destination',
-                        hintStyle: GoogleFonts.inter(
-                            color: kIOSSecondaryText, fontSize: 15),
+                        hintStyle: GoogleFonts.spaceGrotesk(
+                            color: kNightTextDim, fontSize: 15),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -371,13 +390,13 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
                                 },
                                 child: const Icon(Icons.close,
                                     size: 18,
-                                    color: kIOSSecondaryText),
+                                    color: kNightTextDim),
                               ),
                             const SizedBox(width: 4),
                             GestureDetector(
                               onTap: _searchNearMe,
                               child: const Icon(Icons.near_me,
-                                  size: 18, color: kIOSBlue),
+                                  size: 18, color: kNightCyan),
                             ),
                             const SizedBox(width: 12),
                           ],
@@ -456,11 +475,11 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: selected
-                ? kIOSBlue.withValues(alpha: 0.12)
-                : kIOSBackground,
-            borderRadius: BorderRadius.circular(8),
+                ? kNightAccent.withValues(alpha: 0.12)
+                : kNightBg,
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: selected ? kIOSBlue : Colors.transparent,
+              color: selected ? kNightAccent : kNightBorder,
               width: 1,
             ),
           ),
@@ -469,15 +488,15 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
             children: [
               Icon(icon,
                   size: 16,
-                  color: selected ? kIOSBlue : kIOSSecondaryText),
+                  color: selected ? kNightAccent : kNightTextDim),
               const SizedBox(width: 4),
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.spaceGrotesk(
                   fontSize: 11,
                   fontWeight:
-                      selected ? FontWeight.w600 : FontWeight.normal,
-                  color: selected ? kIOSBlue : kIOSSecondaryText,
+                      selected ? FontWeight.w700 : FontWeight.normal,
+                  color: selected ? kNightAccent : kNightTextDim,
                 ),
               ),
             ],
@@ -494,12 +513,13 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
       constraints: const BoxConstraints(maxHeight: 200),
       decoration: BoxDecoration(
-        color: kIOSSurface,
-        borderRadius: BorderRadius.circular(12),
+        color: kNightCard,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kNightBorder),
         boxShadow: [
           BoxShadow(
-              blurRadius: 8,
-              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 12,
+              color: Colors.black.withValues(alpha: 0.4),
               offset: const Offset(0, 2)),
         ],
       ),
@@ -508,7 +528,7 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
         padding: const EdgeInsets.symmetric(vertical: 4),
         itemCount: results.length,
         separatorBuilder: (_, __) => const Divider(
-            height: 1, indent: 40, color: kIOSSeparator),
+            height: 1, indent: 40, color: kNightBorder),
         itemBuilder: (context, index) {
           final result = results[index];
           return ListTile(
@@ -516,19 +536,19 @@ class _RouteSearchBarState extends State<RouteSearchBar> {
             leading: Icon(
               isRecent ? Icons.history : Icons.place,
               size: 18,
-              color: isRecent ? kIOSSecondaryText : kIOSBlue,
+              color: isRecent ? kNightTextDim : kNightCyan,
             ),
             title: Text(
               _shortName(result.name),
-              style: GoogleFonts.inter(
-                  fontSize: 14, color: kIOSPrimaryText),
+              style: GoogleFonts.spaceGrotesk(
+                  fontSize: 14, color: kNightText),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
               result.name,
-              style: GoogleFonts.inter(
-                  fontSize: 12, color: kIOSSecondaryText),
+              style: GoogleFonts.spaceGrotesk(
+                  fontSize: 12, color: kNightTextDim),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
